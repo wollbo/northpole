@@ -9,6 +9,67 @@ pragma solidity ^0.8.0;
 // Also; add maxPayout (provider deposits maxPayout, is returned the remainder of what the buyer wants to hedge)
 // provider sells contract with 1 < X < 10, client wants 5, provider is returned 5 (or what if new contract is created with 1 < X < 5 ?)
 
+contract Northpole { // master contract keeping track of listed+active option offers
+
+    address public owner;
+    uint256 private index;
+    mapping (address => Provider) providers; 
+
+    constructor() {
+        index = 0;
+        owner = msg.sender;
+    }
+
+    struct option { // expand to a range of MWh, feePerMWh, payoutPerMWh, minMWh, maxMWh
+        string priceArea;
+        uint startEpoch;
+        uint endEpoch;
+        uint fee;
+        uint payout;
+        uint strike;
+        uint MWh;
+        uint minMWh;
+        uint maxMWh;
+        uint id;
+        address provider;
+    }
+
+    function newProvider() public returns (address) {
+
+        Provider p = (new Provider)();
+        providers[address(p)] = p;
+
+        return address(p);
+    }
+
+    event optionListed (
+        string priceArea,
+        uint startEpoch,
+        uint endEpoch,
+        uint fee,
+        uint payout,
+        uint strike,
+        uint MWh,
+        uint minMWh,
+        uint maxMWh,
+        uint id,
+        address provider
+    );
+
+    event optionInitiated (
+        string priceArea,
+        uint startEpoch,
+        uint endEpoch,
+        uint fee,
+        uint payout,
+        uint strike,
+        uint MWh,
+        uint id,
+        address provider,
+        address client
+    );
+}
+
 contract Provider {
 
     address public provider = msg.sender;
@@ -36,7 +97,7 @@ contract Provider {
         // add arg _priceArea
         Option o = (new Option){value: _payout}(_startEpoch, _endEpoch, _fee, _payout, _strike);
 
-        // emit event contract created
+        // emit event option created to Northpole contract 
 
         contracts[address(o)] = o;
 
@@ -111,25 +172,17 @@ contract Option {
         _;
     }
 
-    modifier contractStarted() {
-        require(state==State.INITIATED, "Contract has ended");
-        _;
-    }
 
     modifier contractActive() {
         require(state==State.INITIATED);
-        if(startEpoch < block.timestamp && block.timestamp < endEpoch) {
-            _;
-        }
+        require(startEpoch < block.timestamp && block.timestamp < endEpoch, "Current time is outside of contract duration");
+        _;
     }
 
     modifier contractSettlement() {
         require(state == State.INITIATED);
-        require(endEpoch < block.timestamp);
+        require(endEpoch < block.timestamp, "Current time has not yet reached settlement period");
         _;
-        /*if(endEpoch < block.timestamp) {
-            _;
-        }*/
     }
 
     modifier contractFinished() {
@@ -137,11 +190,6 @@ contract Option {
         _;
     }
 
-    modifier settlementPeriod() { // maybe superfluous
-        require(state == State.INITIATED);
-        require((endEpoch < block.timestamp && block.timestamp < (2*endEpoch - startEpoch)), "Current time is outside of settlement period");
-        _;
-    }
 
     // add arg string _priceArea
     constructor(uint _startEpoch, uint _endEpoch, 
@@ -165,8 +213,13 @@ contract Option {
         return address(this).balance;
     }
 
-    function listContract() providerOnly contractCreated public payable { // move contract to front-end
-        state = State.LISTED;
+    function getCurrentEpoch() external view returns (uint) {
+        return block.timestamp;
+    }
+
+    function listContract() providerOnly contractCreated public payable { // moves contract to front-end
+        state = State.LISTED; 
+        // emit event contract listed to Northpole contract
     }
 
     function clientDeposit() contractListed public payable {
@@ -193,7 +246,7 @@ contract Option {
             state = State.FINISHED;
         }
         if (providerDeposited && clientDeposited) {
-            state == State.INITIATED;
+            state = State.INITIATED;
         }   
     }
 
@@ -202,7 +255,7 @@ contract Option {
     function averagePriceCallback() contractSettlement public payable {} // callback request data
 
     function checkStrike() contractSettlement public payable {
-        if (block.timestamp >  (2*endEpoch - startEpoch)) { // if we have entered the next month we should still be able to reach the API, change EA
+        if (block.timestamp > (2*endEpoch - startEpoch)) { // if we have entered the next month we should still be able to reach the API, change EA
             client.transfer(fee);
             provider.transfer(address(this).balance); // provider is responsible for making sure that the contract is called on time
         }
@@ -218,7 +271,7 @@ contract Option {
 
     function updateContract() contractSettlement public payable {} // requestAveragePrice, wait for callback, checkStrike
 
-    function cancelListing() providerOnly contractListed public payable { // cancel active listing
+    function cancelListing() providerOnly contractListed public payable { // cancel active listing, expand to state=State.CREATED
         require(clientDeposited == false);
         provider.transfer(address(this).balance);
         state = State.FINISHED;
