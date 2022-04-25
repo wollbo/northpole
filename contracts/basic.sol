@@ -12,67 +12,53 @@ pragma solidity ^0.8.0;
 contract Northpole { // master contract keeping track of listed+active option offers
 
     address public owner;
-    uint256 private index;
-    mapping (address => Provider) providers; 
+    mapping (address => Provider) providers;
+    mapping (address => Option) options;
+    mapping (address => bool) activeProvider;
+    mapping (address => bool) listed;
+
+    // Mappings: Providers. 
+    // if msg.sender in providers; update listed contract
+    // if msg.sender in providers; move from listed contract to active?
+    
+    // needs to be some sort of dict, keys are defined at provider option creation.
+    // later on this must map to a provider specific "my contracts" dict, also maybe one for each client
 
     constructor() {
-        index = 0;
         owner = msg.sender;
     }
 
-    struct option { // expand to a range of MWh, feePerMWh, payoutPerMWh, minMWh, maxMWh
-        string priceArea;
-        uint startEpoch;
-        uint endEpoch;
-        uint fee;
-        uint payout;
-        uint strike;
-        uint MWh;
-        uint minMWh;
-        uint maxMWh;
-        uint id;
-        address provider;
+    event providerCreated(address providerAddress);
+
+    event newListedContract(address _optionAddress);
+
+    function addToListed(address _optionAddress) public {
+        require(activeProvider[msg.sender]);
+        listed[_optionAddress] = true;
+
+        emit newListedContract(_optionAddress);
     }
 
-    function newProvider() public returns (address) {
+    function endProvider() public { // require all contracts settled?
+        require(activeProvider[msg.sender]);
+        activeProvider[msg.sender] = false;
+    }
+
+    function newProvider() public returns(address) {
 
         Provider p = (new Provider)();
         providers[address(p)] = p;
+        activeProvider[address(p)] = true;
 
+        emit providerCreated(address(p));
         return address(p);
     }
-
-    event optionListed (
-        string priceArea,
-        uint startEpoch,
-        uint endEpoch,
-        uint fee,
-        uint payout,
-        uint strike,
-        uint MWh,
-        uint minMWh,
-        uint maxMWh,
-        uint id,
-        address provider
-    );
-
-    event optionInitiated (
-        string priceArea,
-        uint startEpoch,
-        uint endEpoch,
-        uint fee,
-        uint payout,
-        uint strike,
-        uint MWh,
-        uint id,
-        address provider,
-        address client
-    );
 }
 
 contract Provider {
 
-    address public provider = msg.sender;
+    address public northpole = msg.sender;
+    address public provider = tx.origin;
     mapping (address => Option) contracts; // mapping of issued contracts
 
     //string[4] public priceAreas = ["SE1", "SE2", "SE3", "SE4", "FI"]
@@ -82,6 +68,21 @@ contract Provider {
         require(msg.sender==provider, "Only the provider may call this function");
         _;
     }
+
+    struct option { // expand to a range of MWh, feePerMWh, payoutPerMWh, minMWh, maxMWh - separate into listedOption - initiatedOption ?
+        //string priceArea;
+        uint startEpoch;
+        uint endEpoch;
+        uint fee;
+        uint payout;
+        uint strike;
+        //uint MWh;
+        //uint minMWh;
+        //uint maxMWh;
+        address provider; // maybe add client
+    }
+
+    event optionCreated (); // it is possible that optionCreated -> optionListed is one single event
     
 
     // add arg string _priceArea
@@ -96,9 +97,7 @@ contract Provider {
         // add ether payout and fee denominated in EUR through payout * EUR/USD * ETH/USD
         // add arg _priceArea
         Option o = (new Option){value: _payout}(_startEpoch, _endEpoch, _fee, _payout, _strike);
-
-        // emit event option created to Northpole contract 
-
+        emit optionCreated();
         contracts[address(o)] = o;
 
         return address(o);
@@ -107,11 +106,18 @@ contract Provider {
     function listOption(address _optionAddress) external providerOnly {
         Option o = Option(_optionAddress);
         o.listContract();
+        Northpole np = Northpole(northpole);
+        np.addToListed(_optionAddress);
     }
 
     function cancelListed(address _optionAddress) external payable providerOnly {
         Option o = Option(_optionAddress);
         o.cancelListing();
+    }
+
+    function initOption(address _optionAddress) external providerOnly {
+        Option o = Option(_optionAddress);
+        o.initContract();
     }
 
     function withdrawFinished(address _optionAddress) external payable providerOnly {
@@ -124,6 +130,7 @@ contract Provider {
     }
 
     function endProvider() external payable providerOnly {
+
         selfdestruct(payable(provider));
     }
 
@@ -148,8 +155,35 @@ contract Option {
     bool clientDeposited;
     bool providerDeposited;
 
-    enum State {CREATED, LISTED, INITIATED, FINISHED}
+    enum State {CREATED, LISTED, INITIATED, FINISHED} // possible that CREATED and LISTED should be merged
     State public state;
+
+    event optionListed (
+        //string priceArea,
+        uint startEpoch,
+        uint endEpoch,
+        uint fee,
+        uint payout,
+        uint strike,
+        //uint MWh, // remove here
+        //uint minMWh,
+        //uint maxMWh,
+        //uint id, id mapping to front end listed dict
+        address provider
+    );
+
+    event optionInitiated (
+        //string priceArea,
+        uint startEpoch,
+        uint endEpoch,
+        uint fee,
+        uint payout,
+        uint strike,
+        //uint MWh,
+        //uint id,
+        address provider,
+        address client
+    );
 
 
     modifier providerOnly() {
@@ -191,7 +225,7 @@ contract Option {
     }
 
 
-    // add arg string _priceArea
+    // add arg string _priceArea, maxMWh, minMWh
     constructor(uint _startEpoch, uint _endEpoch, 
                 uint _fee, uint _payout, uint _strike) payable {
         
@@ -205,6 +239,8 @@ contract Option {
         fee = _fee;
         payout = _payout;
         strike = _strike;
+        //mawMWh = _mawMWh;
+        //minMWh = _minMWh;
 
         // emit event contract created
     }
@@ -218,15 +254,28 @@ contract Option {
     }
 
     function listContract() providerOnly contractCreated public payable { // moves contract to front-end
-        state = State.LISTED; 
-        // emit event contract listed to Northpole contract
+        state = State.LISTED;
+        // change entry in listed mapping
+        emit optionListed(
+            //priceArea
+            startEpoch,
+            endEpoch,
+            fee,
+            payout,
+            strike, 
+            //uint minMWh,
+            //uint maxMWh,
+            //id,
+            provider
+        );
     }
 
     function clientDeposit() contractListed public payable {
         require(clientDeposited == false, "Already funded by client");
         require(msg.value == fee);
         client = payable(msg.sender);
-        clientDeposited = true;
+        clientDeposited = true; // here client also supplies selected MWh, minMWh < MWh < maxMWh
+        // such that fee = fee * MWh (fee per MWh)
     }
 
     function clientWithdraw() clientOnly contractListed public payable {
@@ -245,8 +294,20 @@ contract Option {
             }
             state = State.FINISHED;
         }
-        if (providerDeposited && clientDeposited) {
+        if (providerDeposited && clientDeposited) { // contract returns maxMWh - MWh to provider
             state = State.INITIATED;
+            emit optionInitiated(
+                //priceArea,
+                startEpoch,
+                endEpoch,
+                fee,
+                payout,
+                strike,
+                //MWh,
+                //id,
+                provider,
+                client
+            );
         }   
     }
 
