@@ -16,6 +16,8 @@ contract Northpole { // master contract keeping track of listed+active option of
     mapping (address => Option) options;
     mapping (address => bool) activeProvider;
     mapping (address => bool) listed;
+    mapping (address => bool) active;
+    mapping (address => bool) finished;
 
     // Mappings: Providers. 
     // if msg.sender in providers; update listed contract
@@ -28,15 +30,33 @@ contract Northpole { // master contract keeping track of listed+active option of
         owner = msg.sender;
     }
 
-    event providerCreated(address providerAddress);
+    event providerCreated(address _providerAddress);
 
-    event newListedContract(address _optionAddress);
+    event newListedContract(address _providerAddress, address _optionAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike); // expand with contract information
 
-    function addToListed(address _optionAddress) public {
+    event activeContract(address _optionAddress, address _providerAddress, address _clientAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike);
+
+    event finishedContract(address _optionAddress, address _providerAddress, address _clientAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike, uint _value);
+
+
+    function addToListed(address _optionAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike) public {
         require(activeProvider[msg.sender]);
         listed[_optionAddress] = true;
+        emit newListedContract(msg.sender, _optionAddress, _startEpoch, _endEpoch, _fee, _payout, _strike);
+    }
 
-        emit newListedContract(_optionAddress);
+    function addToActive(address _providerAddress, address _clientAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike) public {
+        require(listed[msg.sender]);
+        listed[msg.sender] = false;
+        active[msg.sender] = true;
+        emit activeContract(msg.sender, _providerAddress, _clientAddress, _startEpoch, _endEpoch, _fee, _payout, _strike);
+    }
+
+    function addToFinished(address _providerAddress, address _clientAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike, uint _value) public {
+        require(active[msg.sender]);
+        active[msg.sender] = false;
+        finished[msg.sender] = true;
+        emit finishedContract(msg.sender, _providerAddress, _clientAddress, _startEpoch, _endEpoch, _fee, _payout, _strike, _value);
     }
 
     function endProvider() public { // require all contracts settled?
@@ -82,7 +102,7 @@ contract Provider {
         address provider; // maybe add client
     }
 
-    event optionCreated (); // it is possible that optionCreated -> optionListed is one single event
+    event optionCreated (address optionAddress); // it is possible that optionCreated -> optionListed is one single event
     
 
     // add arg string _priceArea
@@ -96,8 +116,8 @@ contract Provider {
 
         // add ether payout and fee denominated in EUR through payout * EUR/USD * ETH/USD
         // add arg _priceArea
-        Option o = (new Option){value: _payout}(_startEpoch, _endEpoch, _fee, _payout, _strike);
-        emit optionCreated();
+        Option o = (new Option){value: _payout}(northpole, _startEpoch, _endEpoch, _fee, _payout, _strike);
+        emit optionCreated(address(o));
         contracts[address(o)] = o;
 
         return address(o);
@@ -107,7 +127,7 @@ contract Provider {
         Option o = Option(_optionAddress);
         o.listContract();
         Northpole np = Northpole(northpole);
-        np.addToListed(_optionAddress);
+        np.addToListed(address(o), o.getStartEpoch(), o.getEndEpoch(), o.getFee(), o.getPayout(), o.getStrike());
     }
 
     function cancelListed(address _optionAddress) external payable providerOnly {
@@ -130,7 +150,6 @@ contract Provider {
     }
 
     function endProvider() external payable providerOnly {
-
         selfdestruct(payable(provider));
     }
 
@@ -140,6 +159,7 @@ contract Provider {
 
 contract Option {
 
+    address public northpole;
     uint startEpoch;
     uint endEpoch;
     //string priceArea;
@@ -157,34 +177,6 @@ contract Option {
 
     enum State {CREATED, LISTED, INITIATED, FINISHED} // possible that CREATED and LISTED should be merged
     State public state;
-
-    event optionListed (
-        //string priceArea,
-        uint startEpoch,
-        uint endEpoch,
-        uint fee,
-        uint payout,
-        uint strike,
-        //uint MWh, // remove here
-        //uint minMWh,
-        //uint maxMWh,
-        //uint id, id mapping to front end listed dict
-        address provider
-    );
-
-    event optionInitiated (
-        //string priceArea,
-        uint startEpoch,
-        uint endEpoch,
-        uint fee,
-        uint payout,
-        uint strike,
-        //uint MWh,
-        //uint id,
-        address provider,
-        address client
-    );
-
 
     modifier providerOnly() {
         require(msg.sender == provider, "Only the provider can call this function");
@@ -226,13 +218,14 @@ contract Option {
 
 
     // add arg string _priceArea, maxMWh, minMWh
-    constructor(uint _startEpoch, uint _endEpoch, 
+    constructor(address _northpole, uint _startEpoch, uint _endEpoch, 
                 uint _fee, uint _payout, uint _strike) payable {
         
         require(msg.value == _payout, "Not enough funds deposited");
         providerDeposited = true;
         clientDeposited = false;
         provider = payable(msg.sender);
+        northpole = _northpole;
         startEpoch = _startEpoch;
         endEpoch = _endEpoch;
         //priceArea = _priceArea;
@@ -241,8 +234,6 @@ contract Option {
         strike = _strike;
         //mawMWh = _mawMWh;
         //minMWh = _minMWh;
-
-        // emit event contract created
     }
 
     function getContractBalance() external view returns (uint) {
@@ -253,21 +244,32 @@ contract Option {
         return block.timestamp;
     }
 
+    function getStartEpoch() external view returns (uint) {
+        return startEpoch;
+    }
+
+    function getEndEpoch() external view returns (uint) {
+        return endEpoch;
+    }
+
+    function getFee() external view returns (uint) {
+        return fee;
+    }
+
+    function getPayout() external view returns (uint) {
+        return payout;
+    }
+
+    function getStrike() external view returns (uint) {
+        return strike;
+    }
+
+    function getClient() external view returns (address) {
+        return client;
+    }
+
     function listContract() providerOnly contractCreated public payable { // moves contract to front-end
         state = State.LISTED;
-        // change entry in listed mapping
-        emit optionListed(
-            //priceArea
-            startEpoch,
-            endEpoch,
-            fee,
-            payout,
-            strike, 
-            //uint minMWh,
-            //uint maxMWh,
-            //id,
-            provider
-        );
     }
 
     function clientDeposit() contractListed public payable {
@@ -284,30 +286,20 @@ contract Option {
         clientDeposited = false;
     }
 
-    function initContract() contractListed public payable {
+    function initContract() contractListed public payable { // emit event to northpole master contract - remove from listed move to active
         if (block.timestamp > startEpoch) {
+            state = State.FINISHED;
             if (clientDeposited) {
                 client.transfer(fee);
             }
             if (providerDeposited) {
                 provider.transfer(address(this).balance);
             }
-            state = State.FINISHED;
         }
         if (providerDeposited && clientDeposited) { // contract returns maxMWh - MWh to provider
             state = State.INITIATED;
-            emit optionInitiated(
-                //priceArea,
-                startEpoch,
-                endEpoch,
-                fee,
-                payout,
-                strike,
-                //MWh,
-                //id,
-                provider,
-                client
-            );
+            Northpole np = Northpole(northpole);
+            np.addToActive(provider, client, startEpoch, endEpoch, fee, payout, strike);
         }   
     }
 
