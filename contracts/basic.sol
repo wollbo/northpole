@@ -15,7 +15,7 @@ contract Northpole { // master contract keeping track of listed+active option of
     mapping (address => Provider) providers;
     mapping (address => Option) options;
     mapping (address => bool) activeProvider;
-    mapping (address => bool) listed;
+    mapping (address => bool) listed; // contractcycle
     mapping (address => bool) active;
     mapping (address => bool) finished;
 
@@ -57,6 +57,13 @@ contract Northpole { // master contract keeping track of listed+active option of
         active[msg.sender] = false;
         finished[msg.sender] = true;
         emit finishedContract(msg.sender, _providerAddress, _clientAddress, _startEpoch, _endEpoch, _fee, _payout, _strike, _value);
+    }
+
+    function cancelToFinished(address _providerAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike) public {
+        require(listed[msg.sender]);
+        listed[msg.sender] = false;
+        finished[msg.sender] = true;
+        emit finishedContract(msg.sender, _providerAddress, address(0), _startEpoch, _endEpoch, _fee, _payout, _strike, 0);
     }
 
     function endProvider() public { // require all contracts settled?
@@ -118,17 +125,20 @@ contract Provider {
         // add arg _priceArea
         Option o = (new Option){value: _payout}(northpole, _startEpoch, _endEpoch, _fee, _payout, _strike);
         emit optionCreated(address(o));
+        o.listContract(); // consider completely removing CREATED state
+        Northpole np = Northpole(northpole);
+        np.addToListed(address(o), o.getStartEpoch(), o.getEndEpoch(), o.getFee(), o.getPayout(), o.getStrike());
         contracts[address(o)] = o;
 
         return address(o);
     }
 
-    function listOption(address _optionAddress) external providerOnly {
-        Option o = Option(_optionAddress);
-        o.listContract();
-        Northpole np = Northpole(northpole);
-        np.addToListed(address(o), o.getStartEpoch(), o.getEndEpoch(), o.getFee(), o.getPayout(), o.getStrike());
-    }
+    // function listOption(address _optionAddress) external providerOnly {
+    //     Option o = Option(_optionAddress);
+    //     o.listContract();
+    //     Northpole np = Northpole(northpole);
+    //     np.addToListed(address(o), o.getStartEpoch(), o.getEndEpoch(), o.getFee(), o.getPayout(), o.getStrike());
+    // }
 
     function cancelListed(address _optionAddress) external payable providerOnly {
         Option o = Option(_optionAddress);
@@ -150,6 +160,8 @@ contract Provider {
     }
 
     function endProvider() external payable providerOnly {
+        Northpole np = Northpole(northpole);
+        np.endProvider();
         selfdestruct(payable(provider));
     }
 
@@ -296,7 +308,8 @@ contract Option {
                 provider.transfer(address(this).balance);
             }
         }
-        if (providerDeposited && clientDeposited) { // contract returns maxMWh - MWh to provider
+        else { // contract returns maxMWh - MWh to provider
+            require((providerDeposited && clientDeposited), "Both parties have not deposited collateral");
             state = State.INITIATED;
             Northpole np = Northpole(northpole);
             np.addToActive(provider, client, startEpoch, endEpoch, fee, payout, strike);
@@ -307,7 +320,7 @@ contract Option {
 
     function averagePriceCallback() contractSettlement public payable {} // callback request data
 
-    function checkStrike() contractSettlement public payable {
+    function checkStrike() contractSettlement public payable { // in fixedprice scenario only this function needs to be called to settle
         if (block.timestamp > (2*endEpoch - startEpoch)) { // if we have entered the next month we should still be able to reach the API, change EA
             client.transfer(fee);
             provider.transfer(address(this).balance); // provider is responsible for making sure that the contract is called on time
@@ -324,13 +337,16 @@ contract Option {
 
     function updateContract() contractSettlement public payable {} // requestAveragePrice, wait for callback, checkStrike
 
-    function cancelListing() providerOnly contractListed public payable { // cancel active listing, expand to state=State.CREATED
+    function cancelListing() providerOnly contractListed public payable {
         require(clientDeposited == false);
-        provider.transfer(address(this).balance);
+        Northpole np = Northpole(northpole);
+        np.cancelToFinished(provider, startEpoch, endEpoch, fee, payout, strike);
         state = State.FINISHED;
+        provider.transfer(address(this).balance);
+
     }
 
-    function providerWithdraw() providerOnly contractFinished public payable { // possible to get stuck here
+    function providerWithdraw() providerOnly contractFinished public payable { // backup for removing funds
         require(clientDeposited == false);
         provider.transfer(address(this).balance);
     }
