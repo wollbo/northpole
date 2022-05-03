@@ -42,13 +42,13 @@ contract Northpole { // master contract keeping track of listed+active option of
         owner = msg.sender;
     }
 
-    event providerCreated(address _providerAddress);
+    event providerCreated(address providerAddress);
 
-    event newListedContract(address _providerAddress, address _optionAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike); // expand with contract information
+    event newListedContract(address providerAddress, address optionAddress, uint startEpoch, uint endEpoch, uint fee, uint payout, uint strike); // expand with contract information
 
-    event activeContract(address _optionAddress, address _providerAddress, address _clientAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike);
+    event activeContract(address optionAddress, address providerAddress, address clientAddress, uint startEpoch, uint endEpoch, uint fee, uint payout, uint strike);
 
-    event finishedContract(address _optionAddress, address _providerAddress, address _clientAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike, uint _value);
+    event finishedContract(address optionAddress, address providerAddress, address clientAddress, uint startEpoch, uint endEpoch, uint fee, uint payout, uint strike, uint value);
 
 
     function addToListed(address _optionAddress, uint _startEpoch, uint _endEpoch, uint _fee, uint _payout, uint _strike) public {

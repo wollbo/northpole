@@ -1,10 +1,12 @@
-import React from "react";
+import React, { useEffect } from "react";
 import "./Market.css";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router";
 import logo from "../images/npsimple2.png";
 import { ConnectButton, Icon, DatePicker, Select, Input, Button} from "web3uikit";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import Moralis from "moralis/types";
+import { useMoralis, useWeb3ExecuteFunction } from "react-moralis"
 
 const Market = () => {
   const { state: searchFilters } = useLocation(); // change searchReminder to searchFilter, default NO filter show all contracts
@@ -12,22 +14,42 @@ const Market = () => {
   const [contractDate, setContractDate] = useState(searchFilters.contractDate); // should be hardcoded to only day, setDay
   const [priceArea, setPriceArea] = useState(searchFilters.priceArea);
   const [energyAmount, setEnergyAmount] = useState(searchFilters.energyAmount); // some sort of minimum/maximum MWh
+  const { Moralis } = useMoralis();
   //future work: each seller provide a strikePrice/Payout/fee curve which customers can choose to purchase
-  const contractsList = [
-    {
-      attributes: {
-        priceArea: "Sundsvall",
-        contractDate: "2022-04-22",
-        fee: "20 €/MWh",
-        strikePrice: "150 €",
-        payOut: "100 €/MWh",
-        minAmount: "1 MWh",
-        maxAmount: "10 MWh",
-        imgUrl:
-          "https://ipfs.io/images/ipfs-cluster.png",
-      },
-    },
-  ];
+  const [contractsList, setContractsList] = useState();
+  // const contractsList = [
+  //   {
+  //     attributes: {
+  //       priceArea: "Sundsvall",
+  //       contractDate: "2022-04-22",
+  //       fee: "20 €/MWh",
+  //       strikePrice: "150 €",
+  //       payOut: "100 €/MWh",
+  //       minAmount: "1 MWh",
+  //       maxAmount: "10 MWh",
+  //       imgUrl:
+  //         "https://ipfs.io/images/ipfs-cluster.png",
+  //     },
+  //   },
+  // ];
+
+  useEffect(() =>{
+    
+    async function fetchContracts() {
+      const Contracts = Moralis.Object.extend("newListedContracts");
+      const query = new Moralis.Query(Contracts);
+      //query.equalTo("price_area", searchFilters.priceArea);
+      //query.greaterThanOrEqualTo("maxMWh_decimal", searchFilters.energyAmount);
+      //query.lessThanOrEqualTo("minMWh_decimal", searchFilters.energyAmount);
+      query.equalTo("startEpoch_decimal", Date.parse(searchFilters.contractDate)); // verify function with regards to GMT/timezones
+      const result = await query.find();
+
+      setContractsList(result);
+    }
+
+    fetchContracts();
+  }, [searchFilters]);
+
 
   return (
     <>
@@ -77,7 +99,7 @@ const Market = () => {
             Contract Date
             <DatePicker
               id="contractDate"
-              value={contractDate.toISOString().slice(0, 10)} // in final product, this should map to YYYY-MM-01
+              value={contractDate.toISOString().slice(0, 10)} // in final product, this should map to YYYY-MM-01 (but display only YYYY-M)
               onChange={(event) => setContractDate(event.date)} // really only one date needed, should be hardcoded to setDay
             />
           </div>
@@ -112,9 +134,9 @@ const Market = () => {
       <div className="marketPlace">
         <div className="marketPlaceContracts">
           {contractsList &&
-          contractsList.map(e => {
-            return( // and prefill number input beside purchase button+
-              <>
+          contractsList.map(e => { // add some way for contract creation through front end - endEpoch will be Date.parse(startEpoch)+86400000 (Date.parse uses ms)
+            return( // Remap attributes.attribute for each attribute to name in moralis DB !! and add prefill number input beside purchase button+
+              <> 
                 <div className="contractDiv">
                   <img className="priceAreaImg" src={e.attributes.imgUrl}></img>
                   <div className="contractInfo">
