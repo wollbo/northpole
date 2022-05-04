@@ -1,12 +1,11 @@
-import React, { useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import "./Market.css";
 import { Link } from "react-router-dom";
 import { useLocation } from "react-router";
 import logo from "../images/npsimple2.png";
-import { ConnectButton, Icon, DatePicker, Select, Input, Button} from "web3uikit";
-import { useState, useEffect } from "react";
-import Moralis from "moralis/types";
-import { useMoralis, useWeb3ExecuteFunction } from "react-moralis"
+import { ConnectButton, Icon, DatePicker, Select, Input, Button, useNotification} from "web3uikit";
+import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
+import User from "../components/User";
 
 const Market = () => {
   const { state: searchFilters } = useLocation(); // change searchReminder to searchFilter, default NO filter show all contracts
@@ -14,9 +13,38 @@ const Market = () => {
   const [contractDate, setContractDate] = useState(searchFilters.contractDate); // should be hardcoded to only day, setDay
   const [priceArea, setPriceArea] = useState(searchFilters.priceArea);
   const [energyAmount, setEnergyAmount] = useState(searchFilters.energyAmount); // some sort of minimum/maximum MWh
-  const { Moralis } = useMoralis();
-  //future work: each seller provide a strikePrice/Payout/fee curve which customers can choose to purchase
+  const { Moralis, account } = useMoralis();
   const [contractsList, setContractsList] = useState();
+  const contractProcessor = useWeb3ExecuteFunction();
+  const notify = useNotification();
+
+  const handleSuccess= () => {
+    notify({
+      type: "success",
+      message: `Successfully purchased ${priceArea} contract for ${contractDate}`,
+      title: "Purchase confirmed",
+      position: "topL"
+    });
+  };
+
+  const handleError= (msg) => {
+    notify({
+      type: "error",
+      message: `${msg}`,
+      title: "Purchase failed",
+      position: "topL"
+    });
+  };
+
+  const handleNoAccount= (msg) => {
+    notify({
+      type: "error",
+      message: `${msg}`,
+      title: "You need to connect your wallet to purchase contracts",
+      position: "topL"
+    });
+  };
+
   // const contractsList = [
   //   {
   //     attributes: {
@@ -36,12 +64,12 @@ const Market = () => {
   useEffect(() =>{
     
     async function fetchContracts() {
-      const Contracts = Moralis.Object.extend("newListedContracts");
+      const Contracts = Moralis.Object.extend("Listed");
       const query = new Moralis.Query(Contracts);
-      //query.equalTo("price_area", searchFilters.priceArea);
+      query.equalTo("priceArea", searchFilters.priceArea);
       //query.greaterThanOrEqualTo("maxMWh_decimal", searchFilters.energyAmount);
       //query.lessThanOrEqualTo("minMWh_decimal", searchFilters.energyAmount);
-      query.equalTo("startEpoch_decimal", Date.parse(searchFilters.contractDate)); // verify function with regards to GMT/timezones
+      query.equalTo("startEpoch_decimal", Date.parse(searchFilters.contractDate)/1000); // Date.parse returns in ms + GMT, sync this with adapter
       const result = await query.find();
 
       setContractsList(result);
@@ -49,6 +77,37 @@ const Market = () => {
 
     fetchContracts();
   }, [searchFilters]);
+
+  const purchaseContract = async function(optionAddress, fee) {
+
+
+    let options = {
+      contractAddress: optionAddress, // works
+      functionName: "clientDeposit",
+      abi: [
+        {
+          "inputs": [],
+          "name": "clientDeposit",
+          "outputs": [],
+          "stateMutability": "payable",
+          "type": "function"
+        }
+      ],
+      params: {},
+      msgValue: fee
+    }
+
+    await contractProcessor.fetch({
+      params: options,
+      onSuccess: () => {
+        handleSuccess();
+      },
+      onError: (error) => {
+        handleError(error.data.message)
+      }
+    });
+  }
+
 
 
   return (
@@ -63,7 +122,6 @@ const Market = () => {
           <div className="inputs">
             Price Area
             <Select
-              // defaultOptionIndex={0}
               onChange={(data) => setPriceArea(data.id)}
               options={[
                 {
@@ -125,9 +183,9 @@ const Market = () => {
           </Link>
         </div>
         <div className="lrContainers">
-          {/* {account &&
+          {account &&
           <User account={account} />
-        } */}
+        }
           <ConnectButton />
         </div>
       </div>
@@ -140,15 +198,30 @@ const Market = () => {
                 <div className="contractDiv">
                   <img className="priceAreaImg" src={e.attributes.imgUrl}></img>
                   <div className="contractInfo">
-                    <div className="contractTitle">({e.attributes.priceArea} {e.attributes.contractDate}) {e.attributes.strikePrice}</div>
-                    <div className="contractDesc">Payout {e.attributes.payOut}</div> 
+                    <div className="contractTitle"> {">"} {e.attributes.strike} {"€/MWh"}</div>
+                    <div className="contractDesc">
+                      <div className="payout">
+                        <Icon fill="rgb(228, 156, 2)" size={14} svg="matic" /> {e.attributes.payout/10**18} {"/MWh"}
+                        </div>
+                      </div> 
                     <div className="contractDesc">{e.attributes.minAmount} - {e.attributes.maxAmount}</div>
                     <div className="bottomButton">
-                      <Button
+                      <Button // e.attributes.address fed as address parameter to purchaseContract
+                      onClick={() => {
+                        if(account){
+                          purchaseContract(
+                            e.attributes.optionAddress,
+                            Number(e.attributes.fee_decimal.value.$numberDecimal)
+                          )
+                        }else{
+                          handleNoAccount()
+                        }
+                      }
+                      }
                         text="Purchase"
                       />
                       <div className="price">
-                        <Icon fill="rgb(228, 156, 2)" size={10} svg="matic" /> {e.attributes.fee}
+                        <Icon fill="rgb(228, 156, 2)" size={10} svg="matic" /> {e.attributes.fee/10**18} {"/MWh"}
                       </div>
                     </div>
                   </div>

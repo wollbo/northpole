@@ -110,3 +110,11 @@
     color:#808080;
     font-size: 12px;
 }
+
+.payout {
+    display:flex;
+    justify-content:flex-start;
+    gap:5px;
+    color:#808080;
+    font-size: 16px;
+}
