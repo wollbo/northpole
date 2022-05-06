@@ -36,12 +36,6 @@ const Home = () => {
             energyAmount: ""
           }} style={{ textDecoration: 'none' }} className="link">Market</Link></div>
         </div>
-        {/* <div className="tabs">
-          <TabList defaultActiveKey={1} tabStyle="bar">
-            <Tab tabKey={1} tabName={"Home"}></Tab>
-            <Tab tabKey={2} tabName={"Market"}></Tab>
-          </TabList>
-        </div> */}
         <div className="lrContainers">
           <ConnectButton />
         </div>
@@ -87,7 +81,7 @@ const Home = () => {
             <DatePicker
               id="contractDate"
               onChange={(event) => setContractDate(event.date)} // really only one date needed, should be hardcoded to setDay
-              //validation={{min: Date.toISOString().slice(0, 10)}} add validation later
+              //validation={{min: Date.toISOString().slice(0, 10)}} // add validation later
             />
           </div>
           <div className="vl" />

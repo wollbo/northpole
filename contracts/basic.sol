@@ -140,7 +140,7 @@ contract Provider {
         //require(_priceArea in priceAreas);
         require(_fee > 0, "Value must be non-zero");
         require(_payout > 0, "Value must be non-zero");
-        require(msg.value == _payout * 1 ether, "Payout must be deposited at contract creation");
+        require(msg.value == _payout, "Payout must be deposited at contract creation");
 
         // add ether payout and fee denominated in EUR through payout * EUR/USD * ETH/USD
         // add arg _priceArea
@@ -248,7 +248,7 @@ contract Option {
     constructor(address _northpole, string memory _priceArea, uint _startEpoch, uint _duration, 
                 uint _fee, uint _payout, uint _strike) payable {
         
-        require(msg.value == _payout * 1 ether, "Not enough funds deposited");
+        require(msg.value == _payout, "Not enough funds deposited");
         require(keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("se1")) || 
                 keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("se2")) || 
                 keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("se3")) || 
@@ -307,7 +307,7 @@ contract Option {
 
     function clientDeposit() contractListed public payable {
         require(clientDeposited == false, "Already funded by client");
-        require(msg.value == fee * 1 ether);
+        require(msg.value == fee);
         client = payable(msg.sender);
         clientDeposited = true; // here client also supplies selected MWh, minMWh < MWh < maxMWh
         // such that fee = fee * MWh (fee per MWh)
@@ -317,6 +317,7 @@ contract Option {
         require(clientDeposited == true, "Contract is not funded by client");
         client.transfer(fee);
         clientDeposited = false;
+        initContract(); // in the basic case, provider has always deposited
     }
 
     function initContract() contractListed public payable { // emit event to northpole master contract - remove from listed move to active

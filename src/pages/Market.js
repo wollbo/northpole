@@ -16,10 +16,10 @@ const Market = () => {
   const { Moralis, account } = useMoralis();
   const [contractsList, setContractsList] = useState();
   const contractProcessor = useWeb3ExecuteFunction();
-  const notify = useNotification();
+  const dispatch = useNotification();
 
   const handleSuccess= () => {
-    notify({
+    dispatch({
       type: "success",
       message: `Successfully purchased ${priceArea} contract for ${contractDate}`,
       title: "Purchase confirmed",
@@ -28,7 +28,7 @@ const Market = () => {
   };
 
   const handleError= (msg) => {
-    notify({
+    dispatch({
       type: "error",
       message: `${msg}`,
       title: "Purchase failed",
@@ -37,7 +37,7 @@ const Market = () => {
   };
 
   const handleNoAccount= (msg) => {
-    notify({
+    dispatch({
       type: "error",
       message: `${msg}`,
       title: "You need to connect your wallet to purchase contracts",
@@ -64,8 +64,9 @@ const Market = () => {
   useEffect(() =>{
     
     async function fetchContracts() {
-      const Contracts = Moralis.Object.extend("Listed");
+      const Contracts = Moralis.Object.extend("ContractListed");
       const query = new Moralis.Query(Contracts);
+      // add to query: remove initiated contracts from Moralis.object.extend("ContractActive")
       query.equalTo("priceArea", searchFilters.priceArea);
       //query.greaterThanOrEqualTo("maxMWh_decimal", searchFilters.energyAmount);
       //query.lessThanOrEqualTo("minMWh_decimal", searchFilters.energyAmount);
@@ -96,6 +97,8 @@ const Market = () => {
       params: {},
       msgValue: fee
     }
+    console.log(optionAddress);
+    console.log(fee);
 
     await contractProcessor.fetch({
       params: options,
@@ -196,7 +199,7 @@ const Market = () => {
             return( // Remap attributes.attribute for each attribute to name in moralis DB !! and add prefill number input beside purchase button+
               <> 
                 <div className="contractDiv">
-                  <img className="priceAreaImg" src={e.attributes.imgUrl}></img>
+                  <img className="priceAreaImg" src={"https://ipfs.io/images/ipfs-cluster.png"}></img>
                   <div className="contractInfo">
                     <div className="contractTitle"> {">"} {e.attributes.strike} {"€/MWh"}</div>
                     <div className="contractDesc">
@@ -210,7 +213,7 @@ const Market = () => {
                       onClick={() => {
                         if(account){
                           purchaseContract(
-                            e.attributes.optionAddress,
+                            String(e.attributes.optionAddress),
                             Number(e.attributes.fee_decimal.value.$numberDecimal)
                           )
                         }else{
