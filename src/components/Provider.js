@@ -1,33 +1,13 @@
 import React from "react";
-import { Icon, Modal, Card, Button, useNotification } from "web3uikit";
+import { Icon, Modal, Card, Button } from "web3uikit";
 import { useState, useEffect } from "react";
-import { useMoralis, useWeb3ExecuteFunction} from "react-moralis";
+import {useMoralis} from "react-moralis";
 
 function User({account}) {
 
   const [isVisible, setVisible] = useState(false);
   const { Moralis } = useMoralis();
   const [userContracts, setUserContracts] = useState();
-  const contractProcessor = useWeb3ExecuteFunction();
-  const dispatch = useNotification();
-
-  const handleSuccess= () => {
-    dispatch({
-      type: "success",
-      message: `Successfully evaluated contract`,
-      title: "Evaluation successful",
-      position: "topL"
-    });
-  };
-
-  const handleError= (msg) => {
-    dispatch({
-      type: "error",
-      message: `${msg}`,
-      title: "Evaluation failed",
-      position: "topL"
-    });
-  };
 
   const priceAreaMap = {
       "se1": "Luleå",
@@ -54,36 +34,6 @@ function User({account}) {
     fetchContracts();
   }, [isVisible]);
 
-  const evaluateContract = async function(optionAddress) {
-
-
-    let options = {
-      contractAddress: optionAddress, // works
-      functionName: "checkStrike",
-      abi: [
-        {
-          "inputs": [],
-          "name": "checkStrike",
-          "outputs": [],
-          "stateMutability": "payable",
-          "type": "function"
-        }
-      ],
-      params: {},
-    }
-    console.log(optionAddress);
-
-    await contractProcessor.fetch({
-      params: options,
-      onSuccess: () => {
-        handleSuccess();
-      },
-      onError: (error) => {
-        handleError(error.data.message)
-      }
-    });
-  }
-
   function convertDate(epoch) {
     const d = new Date(epoch);
     return d.toISOString().slice(0, 10);
@@ -109,7 +59,7 @@ function User({account}) {
   return (
     <>
       <div onClick={() => setVisible(true)}>
-        <Icon fill="#e49c02" size={24} svg="user" />
+        <Icon fill="#e49c02" size={28} svg="plus" />
       </div>
 
       <Modal
@@ -188,7 +138,6 @@ function User({account}) {
                       />{e.attributes.fee/10**18}
                     </div>
                     <Button
-                      onClick={() => evaluateContract(String(e.attributes.optionAddress))}
                       isFullWidth
                       text="Evaluate"
                       theme="primary"

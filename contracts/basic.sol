@@ -309,15 +309,14 @@ contract Option {
         require(clientDeposited == false, "Already funded by client");
         require(msg.value == fee);
         client = payable(msg.sender);
-        clientDeposited = true; // here client also supplies selected MWh, minMWh < MWh < maxMWh
-        // such that fee = fee * MWh (fee per MWh)
+        clientDeposited = true; // here client also supplies selected MWh, minMWh < MWh < maxMWh such that fee = fee * MWh (fee per MWh)
+        initContract(); // in the basic case, provider has always deposited
     }
 
     function clientWithdraw() clientOnly contractListed public payable {
         require(clientDeposited == true, "Contract is not funded by client");
         client.transfer(fee);
         clientDeposited = false;
-        initContract(); // in the basic case, provider has always deposited
     }
 
     function initContract() contractListed public payable { // emit event to northpole master contract - remove from listed move to active

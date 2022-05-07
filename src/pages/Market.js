@@ -5,6 +5,7 @@ import { useLocation } from "react-router";
 import logo from "../images/npsimple2.png";
 import { ConnectButton, Icon, DatePicker, Select, Input, Button, useNotification} from "web3uikit";
 import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
+import Provider from "../components/Provider"
 import User from "../components/User";
 
 const Market = () => {
@@ -64,15 +65,25 @@ const Market = () => {
   useEffect(() =>{
     
     async function fetchContracts() {
-      const Contracts = Moralis.Object.extend("ContractListed");
-      const query = new Moralis.Query(Contracts);
+      const Listed = Moralis.Object.extend("ContractListed");
+      const query = new Moralis.Query(Listed);
       // add to query: remove initiated contracts from Moralis.object.extend("ContractActive")
       query.equalTo("priceArea", searchFilters.priceArea);
       //query.greaterThanOrEqualTo("maxMWh_decimal", searchFilters.energyAmount);
       //query.lessThanOrEqualTo("minMWh_decimal", searchFilters.energyAmount);
       query.equalTo("startEpoch_decimal", Date.parse(searchFilters.contractDate)/1000); // Date.parse returns in ms + GMT, sync this with adapter
-      const result = await query.find();
 
+      const Active = Moralis.Object.extend("ContractActive");
+      const active = new Moralis.Query(Active);
+      var contracts = await active.find();
+      var activeContracts = [];
+      contracts.forEach(contract => {
+        activeContracts.push(contract.get("optionAddress"));
+      })
+      console.log(activeContracts);
+
+      query.notContainedIn("optionAddress", activeContracts)
+      const result = await query.find();
       setContractsList(result);
     }
 
@@ -190,21 +201,24 @@ const Market = () => {
           <User account={account} />
         }
           <ConnectButton />
+          {account &&
+          <Provider account={account} />
+        }
         </div>
       </div>
       <div className="marketPlace">
         <div className="marketPlaceContracts">
-          {contractsList &&
+          {contractsList && // eventually add /MWh and energy
           contractsList.map(e => { // add some way for contract creation through front end - endEpoch will be Date.parse(startEpoch)+86400000 (Date.parse uses ms)
             return( // Remap attributes.attribute for each attribute to name in moralis DB !! and add prefill number input beside purchase button+
               <> 
-                <div className="contractDiv">
+                <div className="contractDiv"> 
                   <img className="priceAreaImg" src={"https://ipfs.io/images/ipfs-cluster.png"}></img>
                   <div className="contractInfo">
                     <div className="contractTitle"> {">"} {e.attributes.strike} {"€/MWh"}</div>
                     <div className="contractDesc">
                       <div className="payout">
-                        <Icon fill="rgb(228, 156, 2)" size={14} svg="matic" /> {e.attributes.payout/10**18} {"/MWh"}
+                        <Icon fill="rgb(228, 156, 2)" size={14} svg="matic" /> {e.attributes.payout/10**18} 
                         </div>
                       </div> 
                     <div className="contractDesc">{e.attributes.minAmount} - {e.attributes.maxAmount}</div>
@@ -224,11 +238,11 @@ const Market = () => {
                         text="Purchase"
                       />
                       <div className="price">
-                        <Icon fill="rgb(228, 156, 2)" size={10} svg="matic" /> {e.attributes.fee/10**18} {"/MWh"}
+                        <Icon fill="rgb(228, 156, 2)" size={10} svg="matic" /> {e.attributes.fee/10**18} 
                       </div>
                     </div>
                   </div>
-                </div>
+                </div> 
                 <hr className="line2"></hr>
                 </>
             )

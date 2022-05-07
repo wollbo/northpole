@@ -1,394 +1,235 @@
 [
 	{
 		"inputs": [],
-		"stateMutability": "nonpayable",
+		"name": "averagePriceCallback",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "cancelListing",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "checkStrike",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "clientDeposit",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "clientWithdraw",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "initContract",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "listContract",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "providerWithdraw",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "requestAveragePrice",
+		"outputs": [],
+		"stateMutability": "payable",
+		"type": "function"
+	},
+	{
+		"inputs": [
+			{
+				"internalType": "address",
+				"name": "_northpole",
+				"type": "address"
+			},
+			{
+				"internalType": "string",
+				"name": "_priceArea",
+				"type": "string"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_startEpoch",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_duration",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_fee",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_payout",
+				"type": "uint256"
+			},
+			{
+				"internalType": "uint256",
+				"name": "_strike",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "payable",
 		"type": "constructor"
 	},
 	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_optionAddress",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_providerAddress",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_clientAddress",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_startEpoch",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_endEpoch",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_payout",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_strike",
-				"type": "uint256"
-			}
-		],
-		"name": "activeContract",
-		"type": "event"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_providerAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_clientAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_startEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_endEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_payout",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_strike",
-				"type": "uint256"
-			}
-		],
-		"name": "addToActive",
+		"inputs": [],
+		"name": "updateContract",
 		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_providerAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_clientAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_startEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_endEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_payout",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_strike",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_value",
-				"type": "uint256"
-			}
-		],
-		"name": "addToFinished",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_optionAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_startEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_endEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_payout",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_strike",
-				"type": "uint256"
-			}
-		],
-		"name": "addToListed",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_providerAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_startEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_endEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_payout",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_strike",
-				"type": "uint256"
-			}
-		],
-		"name": "cancelToFinished",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"stateMutability": "payable",
 		"type": "function"
 	},
 	{
 		"inputs": [],
-		"name": "endProvider",
-		"outputs": [],
-		"stateMutability": "nonpayable",
+		"name": "client",
+		"outputs": [
+			{
+				"internalType": "address payable",
+				"name": "",
+				"type": "address"
+			}
+		],
+		"stateMutability": "view",
 		"type": "function"
-	},
-	{
-		"inputs": [
-			{
-				"internalType": "address",
-				"name": "_providerAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "address",
-				"name": "_clientAddress",
-				"type": "address"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_startEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_endEpoch",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_payout",
-				"type": "uint256"
-			},
-			{
-				"internalType": "uint256",
-				"name": "_strike",
-				"type": "uint256"
-			}
-		],
-		"name": "expiredToFinished",
-		"outputs": [],
-		"stateMutability": "nonpayable",
-		"type": "function"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_optionAddress",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_providerAddress",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_clientAddress",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_startEpoch",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_endEpoch",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_payout",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_strike",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_value",
-				"type": "uint256"
-			}
-		],
-		"name": "finishedContract",
-		"type": "event"
-	},
-	{
-		"anonymous": false,
-		"inputs": [
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_providerAddress",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_optionAddress",
-				"type": "address"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_startEpoch",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_endEpoch",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_fee",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_payout",
-				"type": "uint256"
-			},
-			{
-				"indexed": false,
-				"internalType": "uint256",
-				"name": "_strike",
-				"type": "uint256"
-			}
-		],
-		"name": "newListedContract",
-		"type": "event"
 	},
 	{
 		"inputs": [],
-		"name": "newProvider",
+		"name": "getContractBalance",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getCurrentEpoch",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getDuration",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getFee",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPayout",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getPriceArea",
+		"outputs": [
+			{
+				"internalType": "string",
+				"name": "",
+				"type": "string"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getStartEpoch",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "getStrike",
+		"outputs": [
+			{
+				"internalType": "uint256",
+				"name": "",
+				"type": "uint256"
+			}
+		],
+		"stateMutability": "view",
+		"type": "function"
+	},
+	{
+		"inputs": [],
+		"name": "northpole",
 		"outputs": [
 			{
 				"internalType": "address",
@@ -396,30 +237,30 @@
 				"type": "address"
 			}
 		],
-		"stateMutability": "nonpayable",
+		"stateMutability": "view",
 		"type": "function"
 	},
 	{
-		"anonymous": false,
-		"inputs": [
+		"inputs": [],
+		"name": "provider",
+		"outputs": [
 			{
-				"indexed": false,
-				"internalType": "address",
-				"name": "_providerAddress",
+				"internalType": "address payable",
+				"name": "",
 				"type": "address"
 			}
 		],
-		"name": "providerCreated",
-		"type": "event"
+		"stateMutability": "view",
+		"type": "function"
 	},
 	{
 		"inputs": [],
-		"name": "owner",
+		"name": "state",
 		"outputs": [
 			{
-				"internalType": "address",
+				"internalType": "enum Option.State",
 				"name": "",
-				"type": "address"
+				"type": "uint8"
 			}
 		],
 		"stateMutability": "view",
