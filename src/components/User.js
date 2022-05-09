@@ -29,15 +29,6 @@ function User({account}) {
     });
   };
 
-  const priceAreaMap = {
-      "se1": "Luleå",
-      "se2": "Sundsvall",
-      "se3": "Stockholm",
-      "se4": "Malmö",
-      "fin": "Finland",
-      "sys": "System"
-  };
-
 
   useEffect(() => {
 

@@ -41,6 +41,21 @@ function Provider({account}) {
     return e/1000;
   }
 
+  useEffect(() => { // need a case for when there is no provider contract
+
+    async function fetchProviders() {
+      const Contracts = Moralis.Object.extend("ContractProvider"); // not only listed but ACTIVE contracts
+      const query = new Moralis.Query(Contracts);
+      query.equalTo("providerOwner", account);
+      const result = await query.find();
+
+     
+      setProviderContracts(result);
+    }
+
+    fetchProviders();
+  }, [isVisible]);
+
   const createContract = async function(providerAddress, priceArea, startEpoch, duration, fee, payout, strike) { // needs to be linked to and called from a provider contract
 
 

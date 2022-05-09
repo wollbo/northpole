@@ -42,7 +42,7 @@ contract Northpole { // master contract keeping track of listed+active option of
         owner = msg.sender;
     }
 
-    event providerCreated(address providerAddress);
+    event providerCreated(address providerAddress, address providerOwner);
 
     event newListedContract(address providerAddress, address optionAddress, string priceArea, uint startEpoch, uint duration, uint fee, uint payout, uint strike); // expand with contract information
 
@@ -111,7 +111,7 @@ contract Northpole { // master contract keeping track of listed+active option of
         providers[address(p)] = p;
         activeProvider[address(p)] = true;
 
-        emit providerCreated(address(p));
+        emit providerCreated(address(p), msg.sender);
         return address(p);
     }
 }
