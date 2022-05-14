@@ -16,13 +16,13 @@ function Provider({account}) {
   const contractProcessor = useWeb3ExecuteFunction();
   const dispatch = useNotification();
 
-  const providerAddress = "0xc42a1d6b87419e66a6670cc3b21b5d020e968e70"
+  const northpoleAddress = "0xA753E4a0a82e4eC531ABE3636E2CF04629984f33";
 
   const handleSuccess= () => {
     dispatch({
       type: "success",
-      message: `Successfully evaluated contract`,
-      title: "Evaluation successful",
+      message: `Successfully created contract`,
+      title: "Creation successful",
       position: "topL"
     });
   };
@@ -36,6 +36,15 @@ function Provider({account}) {
     });
   };
 
+  const handleProviderSuccess= () => {
+    dispatch({
+      type: "success",
+      message: `Successfully created provider contract. Close this window and press the "+" again to create contracts`,
+      title: "Provider creation successful",
+      position: "topL"
+    });
+  };
+
   function convertEpoch(date) {
     const e = Date.parse(date);
     return e/1000;
@@ -44,7 +53,7 @@ function Provider({account}) {
   useEffect(() => { // need a case for when there is no provider contract
 
     async function fetchProviders() {
-      const Contracts = Moralis.Object.extend("ContractProvider"); // not only listed but ACTIVE contracts
+      const Contracts = Moralis.Object.extend("Provider"); // not only listed but ACTIVE contracts
       const query = new Moralis.Query(Contracts);
       query.equalTo("providerOwner", account);
       const result = await query.find();
@@ -55,6 +64,41 @@ function Provider({account}) {
 
     fetchProviders();
   }, [isVisible]);
+
+  const createProvider = async function(northpoleAddress) {
+    
+    let options = {
+      contractAddress: northpoleAddress,
+      functionName: "newProvider",
+      abi: [
+        {
+          "inputs": [],
+          "name": "newProvider",
+          "outputs": [
+            {
+              "internalType": "address",
+              "name": "",
+              "type": "address"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ],
+      params: {}
+    }
+    console.log(northpoleAddress)
+
+    await contractProcessor.fetch({
+      params: options,
+      onSuccess: () => {
+        handleProviderSuccess();
+      },
+      onError: (error) => {
+        handleError(error.message)
+      }
+    });
+  }
 
   const createContract = async function(providerAddress, priceArea, startEpoch, duration, fee, payout, strike) { // needs to be linked to and called from a provider contract
 
@@ -109,7 +153,6 @@ function Provider({account}) {
         }
       ],
       params: {
-        providerAddress, 
         priceArea, 
         startEpoch, 
         duration, 
@@ -134,7 +177,7 @@ function Provider({account}) {
         handleSuccess();
       },
       onError: (error) => {
-        handleError(error.message)
+        handleError(error)
       }
     });
   }
@@ -154,122 +197,142 @@ function Provider({account}) {
         width="330px"
       >
         <div style={{display:"flex", justifyContent:"start", flexWrap:"wrap", gap:"10px"}}>
-          { // add loop through newProvider in moralis + add button to create new provider (can only be executed if user does not have an active provider in database)
+          {providerContracts &&
+            providerContracts.map((e)=>{
+              return(
+                <div style={{ width: "200px"}}>
+                  <Card
+                    isDisabled // add convertPriceArea
+                  >
+                  <div className="inputs">
+                    Price Area
+                    <Select
+                      defaultOptionIndex={0}
+                      onChange={(data) => setPriceArea(data.id)}
+                      options={[
+                        {
+                          id: "se1",
+                          label: "Luleå"
+                        },
+                        {
+                          id: "se2",
+                          label: "Sundsvall"
+                        },
+                        {
+                          id: "se3",
+                          label: "Stockholm"
+                        },
+                        {
+                          id: "se4",
+                          label: "Malmö"
+                        },
+                        {
+                          id: "fin",
+                          label: "Finland"
+                        },
+                        {
+                          id: "sys",
+                          label: "System"
+                        },
+                      ]}
+                    />
+                  </div>
+                  <div className="inputs">
+                    Contract Date
+                    <DatePicker
+                      id="contractDate"
+                      onChange={(event) => setContractDate(event.date)} // really only one date needed, should be hardcoded to setDay
+                      //validation={{min: Date.toISOString().slice(0, 10)}} // add validation later
+                    />
+                  </div>
+                  <div className="inputs">
+                    Strike €/MWh
+                    <Input
+                      value={100}
+                      name="addStrike"
+                      onChange={(event) => setStrike(event.target.value)}
+                    />
+                  </div>
+                  <div className="inputs">
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '5px',
+                        justifyContent:'flex-start',
+                        width: '70%'
+                      }}
+                    >
+                      Payout 
+                      <Icon
+                        fill="rgb(228, 156, 2)" 
+                        size={14} 
+                        svg="matic"
+                      />
+                    </div>
+                    <Input
+                      value={1/100}
+                      name="addPayout"
+                      type="number"
+                      onChange={(event) => setPayout(event.target.value)}
+                    />
+                  </div>
+                  <div className="inputs">
+                    <div
+                      style={{
+                        display: 'flex',
+                        gap: '5px',
+                        justifyContent:'flex-start',
+                        width: '70%'
+                      }}
+                    >
+                      Fee
+                      <Icon
+                        fill="rgb(228, 156, 2)" 
+                        size={14} 
+                        svg="matic"
+                      />
+                    </div>
+                    <Input
+                      value={1/1000}
+                      name="addFee"
+                      type="number"
+                      onChange={(event) => setFee(event.target.value)}
+                    />
+                  </div>
+                  <Button
+                    onClick={() => createContract(
+                      String(e.attributes.providerAddress), // provider contract address in database
+                      priceArea,
+                      convertEpoch(contractDate),
+                      86400,
+                      Number(fee*10**18),
+                      Number(payout*10**18),
+                      strike
+                    )}
+                    isFullWidth
+                    text="Create"
+                    theme="primary"
+                  />
+                </Card> 
+              </div>
+              )
+            })
+          }
+          {console.log(providerContracts)}
+          {!(providerContracts && providerContracts.length>0) && 
             <div style={{ width: "200px"}}>
-              <Card
-                isDisabled // add convertPriceArea
-              >
-              <div className="inputs">
-                Price Area
-                <Select
-                  defaultOptionIndex={0}
-                  onChange={(data) => setPriceArea(data.id)}
-                  options={[
-                    {
-                      id: "se1",
-                      label: "Luleå"
-                    },
-                    {
-                      id: "se2",
-                      label: "Sundsvall"
-                    },
-                    {
-                      id: "se3",
-                      label: "Stockholm"
-                    },
-                    {
-                      id: "se4",
-                      label: "Malmö"
-                    },
-                    {
-                      id: "fin",
-                      label: "Finland"
-                    },
-                    {
-                      id: "sys",
-                      label: "System"
-                    },
-                  ]}
-                />
-              </div>
-              <div className="inputs">
-                Contract Date
-                <DatePicker
-                  id="contractDate"
-                  onChange={(event) => setContractDate(event.date)} // really only one date needed, should be hardcoded to setDay
-                  //validation={{min: Date.toISOString().slice(0, 10)}} // add validation later
-                />
-              </div>
-              <div className="inputs">
-                Strike €/MWh
-                <Input
-                  value={100}
-                  name="addStrike"
-                  onChange={(event) => setStrike(event.target.value)}
-                />
-              </div>
-              <div className="inputs">
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '5px',
-                    justifyContent:'flex-start',
-                    width: '70%'
-                  }}
-                >
-                  Payout 
-                  <Icon
-                    fill="rgb(228, 156, 2)" 
-                    size={14} 
-                    svg="matic"
-                  />
-                </div>
-                <Input
-                  value={1/100}
-                  name="addPayout"
-                  type="number"
-                  onChange={(event) => setPayout(Number(event.target.value*10**18))}
-                />
-              </div>
-              <div className="inputs">
-                <div
-                  style={{
-                    display: 'flex',
-                    gap: '5px',
-                    justifyContent:'flex-start',
-                    width: '70%'
-                  }}
-                >
-                  Fee
-                  <Icon
-                    fill="rgb(228, 156, 2)" 
-                    size={14} 
-                    svg="matic"
-                  />
-                </div>
-                <Input
-                  value={1/1000}
-                  name="addFee"
-                  type="number"
-                  onChange={(event) => setFee(Number(event.target.value*10**18))}
-                />
-              </div>
-              <Button
-                onClick={() => createContract(
-                  providerAddress,
-                  priceArea,
-                  convertEpoch(contractDate),
-                  86400,
-                  fee,
-                  payout,
-                  strike
-                )}
-                isFullWidth
-                text="Create"
-                theme="primary"
-              />
-            </Card> 
-          </div>
+              <Card>
+                New provider contract needs to be created
+                <Button
+                      onClick={() => createProvider(
+                        northpoleAddress, // provider contract address in database
+                      )}
+                      isFullWidth
+                      text="Create"
+                      theme="primary"
+                    />
+              </Card> 
+            </div>
           }
         </div>
       </Modal>

@@ -96,7 +96,7 @@ function User({account}) {
       return shortName;
     }
   }
-
+ // add section with finished contracts + result (strike met, strike not met, failed (for not initialized+not called in time))
   return (
     <>
       <div onClick={() => setVisible(true)}>

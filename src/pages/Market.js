@@ -81,8 +81,18 @@ const Market = () => {
         activeContracts.push(contract.get("optionAddress"));
       })
       console.log(activeContracts);
-
       query.notContainedIn("optionAddress", activeContracts)
+
+      const Finished = Moralis.Object.extend("ContractFinished");
+      const finished = new Moralis.Query(Finished);
+      var contracts = await finished.find();
+      var finishedContracts = [];
+      contracts.forEach(contract => {
+        finishedContracts.push(contract.get("optionAddress"));
+      })
+      console.log(finishedContracts);
+      query.notContainedIn("optionAddress", finishedContracts)
+
       const result = await query.find();
       setContractsList(result);
     }
