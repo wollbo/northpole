@@ -3,7 +3,7 @@ import "./Home.css";
 import { Link } from "react-router-dom";
 import bg from "../images/waterfallbg.jpg";
 import logo from "../images/npsimple.png";
-import { ConnectButton, DatePicker, Select, Input, Icon, TabList, Tab } from "web3uikit";
+import { ConnectButton, DatePicker, Select, Input, Icon, Logo} from "web3uikit";
 import { useState } from "react";
 
 
@@ -109,6 +109,20 @@ const Home = () => {
       <div className="electricityMarket">
         <div className="title"> Hedge electricity</div>
         <div className="text"> Peer-to-peer decentralized binary options on European physical energy markets </div>
+      </div>
+      <div className="bottomRight">
+        <div>
+          <Icon fill="rgb(255, 255, 255)" size={25} svg="chainlink" />
+        </div>
+        <div>
+          <Icon fill="rgb(255, 255, 255)" size={33} svg="matic" />
+        </div>
+        <div>
+          <Logo color="white" theme="icon"/>
+        </div>
+      </div>
+      <div className="bottomRightText">
+        <div className="text"> Powered by</div>
       </div>
     </>
   );

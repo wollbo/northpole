@@ -18,6 +18,15 @@ function Provider({account}) {
 
   const northpoleAddress = "0xA753E4a0a82e4eC531ABE3636E2CF04629984f33";
 
+  const providerContractConst = "0xe823e0226cebfc0d1964348e2c06e16e8435901b"
+  const priceAreaConst = "se2";
+  const contractEpochConst = 1653613200;
+  const durationConst = 84000;
+  const strikePriceConst = 100;
+  const payoutConst = 100;
+  const feeConst = 1000;
+
+
   const handleSuccess= () => {
     dispatch({
       type: "success",
@@ -100,7 +109,7 @@ function Provider({account}) {
     });
   }
 
-  const createContract = async function(providerAddress, priceArea, startEpoch, duration, fee, payout, strike) { // needs to be linked to and called from a provider contract
+  const createContract = async function(providerAddress, _priceArea, _startEpoch, _duration, _fee, _payout, _strike) { // needs to be linked to and called from a provider contract
 
 
     let options = {
@@ -153,22 +162,22 @@ function Provider({account}) {
         }
       ],
       params: {
-        priceArea, 
-        startEpoch, 
-        duration, 
-        fee, 
-        payout,
-        strike
+        _priceArea, 
+        _startEpoch, 
+        _duration, 
+        _fee, 
+        _payout,
+        _strike
       },
-      msgValue: payout
+      msgValue: _payout
     }
     console.log(providerAddress);
-    console.log(priceArea);
-    console.log(startEpoch);
-    console.log(duration);
-    console.log(fee); 
-    console.log(payout); 
-    console.log(strike); 
+    console.log(_priceArea);
+    console.log(_startEpoch);
+    console.log(_duration);
+    console.log(_fee); 
+    console.log(_payout); 
+    console.log(_strike); 
 
 
     await contractProcessor.fetch({
@@ -305,14 +314,28 @@ function Provider({account}) {
                       priceArea,
                       convertEpoch(contractDate),
                       86400,
-                      Number(fee*10**18),
-                      Number(payout*10**18),
+                      String(fee*10**18),
+                      String(payout*10**18),
                       strike
                     )}
                     isFullWidth
                     text="Create"
                     theme="primary"
                   />
+                  {/* <Button
+                    onClick={() => createContract(
+                      providerContractConst, // provider contract address in database
+                      priceAreaConst,
+                      contractEpochConst,
+                      86400,
+                      feeConst,
+                      payoutConst,
+                      strikePriceConst
+                    )}
+                    isFullWidth
+                    text="Create"
+                    theme="primary"
+                  />  */}
                 </Card> 
               </div>
               )

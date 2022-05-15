@@ -107,6 +107,28 @@
   padding-left:120px;
 }
 
+.bottomRight {
+  margin-top: 25vh;
+  color: #FFFFFF;
+  display: flex;
+  justify-content: center;
+  width: 400px;
+  position: absolute;
+  right: 25px;
+  gap: 20px
+}
+
+.bottomRightText {
+  margin-top: 22vh;
+  color: #FFFFFF;
+  display: flex;
+  justify-content: center;
+  width: 400px;
+  position: absolute;
+  right: 25px;
+  gap: 20px
+}
+
 .title {
   font-weight: bold;
   font-size: 30px;

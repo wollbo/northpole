@@ -62,14 +62,6 @@
     justify-content: space-around;
 }
 
-.rentalDivH {
-    animation: mymove 3s;
-    border-radius: 20px;
-    display: flex;
-    justify-content: flex-start;
-}
-
-
 @keyframes mymove {
     from {background-color: #dddddd;}
     to {background-color: #dddddd00;}

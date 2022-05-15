@@ -8,6 +8,7 @@ function User({account}) {
   const [isVisible, setVisible] = useState(false);
   const { Moralis } = useMoralis();
   const [userContracts, setUserContracts] = useState();
+  const [providerContracts, setProviderContracts] = useState();
   const contractProcessor = useWeb3ExecuteFunction();
   const dispatch = useNotification();
 
@@ -33,13 +34,30 @@ function User({account}) {
   useEffect(() => {
 
     async function fetchContracts() {
-      const Contracts = Moralis.Object.extend("ContractActive"); // not only listed but ACTIVE contracts
+      const Contracts = Moralis.Object.extend("Active"); // not only listed but ACTIVE contracts
       const query = new Moralis.Query(Contracts);
       query.equalTo("clientAddress", account);
       const result = await query.find();
+      console.log(result)
 
+      const Providers = Moralis.Object.extend("Provider");
+      const provider = new Moralis.Query(Providers);
+      provider.equalTo("providerOwner", account);
+      const providerResult = await provider.find();
+      console.log(providerResult)
+      
+      const providerContracts = [];
+      providerResult.forEach(contract => {
+        providerContracts.push(contract.get("providerAddress"));
+      })
+      console.log(providerContracts)
+
+      const providerQuery = new Moralis.Query(Contracts);
+      providerQuery.containedIn("providerAddress", providerContracts)
+      const providerResultMain = await providerQuery.find();
      
       setUserContracts(result);
+      setProviderContracts(providerResultMain)
     }
 
     fetchContracts();
@@ -183,6 +201,103 @@ function User({account}) {
                       isFullWidth
                       text="Evaluate"
                       theme="primary"
+                    />
+                  </Card> 
+                </div>
+              )
+            })
+          }
+          {providerContracts &&
+            providerContracts.map((e)=>{
+              return(
+                <div style={{ width: "200px"}}>
+                  <Card
+                    isDisabled
+                    title={`${e.attributes.priceArea} ${convertDate(e.attributes.startEpoch*1000)}`} // add convertPriceArea
+                  >
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        justifyContent:'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: '#000000',
+                          fontWeight: 600
+                        }}
+                      >
+                        Provider
+                      </span>
+                    </div>
+                    <div>
+                      <img
+                        width="180px"
+                        src="https://ipfs.io/images/ipfs-cluster.png"
+                        />
+                    </div>
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        justifyContent:'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: '#000000',
+                          fontWeight: 600
+                        }}
+                      >
+                        Strike {e.attributes.strike}  €/MWh
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        color: '#808080',
+                        display: 'flex',
+                        padding: '2.5px',
+                        gap: '5px',
+                        justifyContent:'flex-end',
+                        fontSize: '12px',
+                        width: '70%'
+                      }}
+                    >
+                      Payout 
+                      <Icon
+                        fill="rgb(228, 156, 2)" 
+                        size={14} 
+                        svg="matic"
+                      />
+                      {e.attributes.payout/10**18}
+                    </div>
+                    <div
+                      style={{
+                        color: '#808080',
+                        display: 'flex',
+                        padding: '2.5px',
+                        gap: '5px',
+                        justifyContent:'flex-end',
+                        fontSize: '12px',
+                        width: '70%'
+                      }}
+                    >
+                      Fee
+                      <Icon
+                        fill="rgb(228, 156, 2)" 
+                        size={14} 
+                        svg="matic"
+                      />{e.attributes.fee/10**18}
+                    </div>
+                    <Button
+                      onClick={() => evaluateContract(String(e.attributes.optionAddress))}
+                      isFullWidth
+                      text="Evaluate"
+                      theme="colored"
+                      color="red"
                     />
                   </Card> 
                 </div>
