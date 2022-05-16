@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 
 class Adapter:
 
-	load_dotenv()
+    load_dotenv()
     url = os.getenv('NP_API')
 
     """

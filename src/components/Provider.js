@@ -18,15 +18,6 @@ function Provider({account}) {
 
   const northpoleAddress = "0xA753E4a0a82e4eC531ABE3636E2CF04629984f33";
 
-  const providerContractConst = "0xe823e0226cebfc0d1964348e2c06e16e8435901b"
-  const priceAreaConst = "se2";
-  const contractEpochConst = 1653613200;
-  const durationConst = 84000;
-  const strikePriceConst = 100;
-  const payoutConst = 100;
-  const feeConst = 1000;
-
-
   const handleSuccess= () => {
     dispatch({
       type: "success",
@@ -220,27 +211,27 @@ function Provider({account}) {
                       onChange={(data) => setPriceArea(data.id)}
                       options={[
                         {
-                          id: "se1",
+                          id: "SE1",
                           label: "Luleå"
                         },
                         {
-                          id: "se2",
+                          id: "SE2",
                           label: "Sundsvall"
                         },
                         {
-                          id: "se3",
+                          id: "SE3",
                           label: "Stockholm"
                         },
                         {
-                          id: "se4",
+                          id: "SE4",
                           label: "Malmö"
                         },
                         {
-                          id: "fin",
+                          id: "FI",
                           label: "Finland"
                         },
                         {
-                          id: "sys",
+                          id: "SYS",
                           label: "System"
                         },
                       ]}
@@ -322,20 +313,6 @@ function Provider({account}) {
                     text="Create"
                     theme="primary"
                   />
-                  {/* <Button
-                    onClick={() => createContract(
-                      providerContractConst, // provider contract address in database
-                      priceAreaConst,
-                      contractEpochConst,
-                      86400,
-                      feeConst,
-                      payoutConst,
-                      strikePriceConst
-                    )}
-                    isFullWidth
-                    text="Create"
-                    theme="primary"
-                  />  */}
                 </Card> 
               </div>
               )

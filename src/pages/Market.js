@@ -150,27 +150,27 @@ const Market = () => {
               onChange={(data) => setPriceArea(data.id)}
               options={[
                 {
-                  id: "se1",
+                  id: "SE1",
                   label: "Luleå"
                 },
                 {
-                  id: "se2",
+                  id: "SE2",
                   label: "Sundsvall"
                 },
                 {
-                  id: "se3",
+                  id: "SE3",
                   label: "Stockholm"
                 },
                 {
-                  id: "se4",
+                  id: "SE4",
                   label: "Malmö"
                 },
                 {
-                  id: "fin",
+                  id: "FI",
                   label: "Finland"
                 },
                 {
-                  id: "sys",
+                  id: "SYS",
                   label: "System"
                 },
               ]}

@@ -249,12 +249,12 @@ contract Option {
                 uint _fee, uint _payout, uint _strike) payable {
         
         require(msg.value == _payout, "Not enough funds deposited");
-        require(keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("se1")) || 
-                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("se2")) || 
-                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("se3")) || 
-                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("se4")) ||
-                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("fin")) ||
-                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("sys")));
+        require(keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("SE1")) || 
+                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("SE2")) || 
+                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("SE3")) || 
+                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("SE4")) ||
+                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("FI")) ||
+                keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("SYS")));
         providerDeposited = true;
         clientDeposited = false;
         provider = payable(msg.sender);

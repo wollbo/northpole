@@ -100,12 +100,12 @@ function User({account}) {
 
   function convertPriceArea(shortName) {
     const priceAreaMap = {
-      "se1": "Luleå",
-      "se2": "Sundsvall",
-      "se3": "Stockholm",
-      "se4": "Malmö",
-      "fin": "Finland",
-      "sys": "System"
+      "SE1": "Luleå",
+      "SE2": "Sundsvall",
+      "SE3": "Stockholm",
+      "SE4": "Malmö",
+      "FI": "Finland",
+      "SYS": "System"
     };
     try {
       return priceAreaMap.shortName;

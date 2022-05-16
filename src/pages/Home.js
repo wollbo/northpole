@@ -9,7 +9,7 @@ import { useState } from "react";
 
 const Home = () => {
   const [contractDate, setContractDate] = useState(new Date()); // should be hardcoded to only day, setDay
-  const [priceArea, setPriceArea] = useState("se1");
+  const [priceArea, setPriceArea] = useState("SE1");
   const [energyAmount, setEnergyAmount] = useState(1); // some sort of minimum/maximum MWh
   // has to be in range of listed contracts minPower < powerAmount < maxPower
   // create market page, default clickable through tab- no filter
@@ -49,27 +49,27 @@ const Home = () => {
               onChange={(data) => setPriceArea(data.id)}
               options={[
                 {
-                  id: "se1",
+                  id: "SE1",
                   label: "Luleå"
                 },
                 {
-                  id: "se2",
+                  id: "SE2",
                   label: "Sundsvall"
                 },
                 {
-                  id: "se3",
+                  id: "SE3",
                   label: "Stockholm"
                 },
                 {
-                  id: "se4",
+                  id: "SE4",
                   label: "Malmö"
                 },
                 {
-                  id: "fin",
+                  id: "FI",
                   label: "Finland"
                 },
                 {
-                  id: "sys",
+                  id: "SYS",
                   label: "System"
                 },
               ]}
