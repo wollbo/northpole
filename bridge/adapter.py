@@ -78,12 +78,17 @@ class Adapter:
         return self.extract_from_row(row, _with=price_area)
 
 
+    def ensure_decimal(self, decimal_input):
+        decimal_string = str(decimal_input)
+        return decimal_string.replace(',', '.', 1)
+
+
     def create_request(self):
         try:
             url = self.url
             response = self.bridge.request(url)
             data = self.parse_nordpool_request(response.json(), self.to_param)
-            self.result = data[self.re_param]
+            self.result = self.ensure_decimal(data[self.re_param])
             self.result_success(data)
         except Exception as e:
             print(response.text)
