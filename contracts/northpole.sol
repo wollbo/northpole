@@ -125,6 +125,9 @@ contract Provider {
     address public provider = tx.origin;
     mapping (address => Option) contracts; // mapping of issued contracts
 
+    address public LINK_MATIC = 0x326C977E6efc84E512bB9C30f76E30c160eD06FB;
+    uint public ORACLE_PAYMENT = 1 * 10 ** 17;
+
     //string[4] public priceAreas = ["SE1", "SE2", "SE3", "SE4", "FI"]
 
 
@@ -144,10 +147,15 @@ contract Provider {
         require(_fee > 0, "Value must be non-zero");
         require(_payout > 0, "Value must be non-zero");
         require(msg.value == _payout, "Payout must be deposited at contract creation");
+        //require(address(this).balance > _payout, "Provider contract must be appropriately funded with ETH"); analogous to link funding process
+
 
         // add ether payout and fee denominated in EUR through payout * EUR/USD * ETH/USD
         // add arg _priceArea
-        Option o = (new Option){value: _payout}(northpole, _priceArea, _startEpoch, _duration, _fee, _payout, _strike);
+        Option o = (new Option){value: _payout}(northpole, _priceArea, _startEpoch, _duration, _fee, _payout, _strike, LINK_MATIC, ORACLE_PAYMENT);
+        LinkTokenInterface link = LinkTokenInterface(LINK_MATIC);
+        link.transfer(address(o), ORACLE_PAYMENT);
+
         emit optionCreated(address(o));
         o.listContract(); // consider completely removing CREATED state
         Northpole np = Northpole(northpole);
@@ -202,6 +210,9 @@ contract Option is ChainlinkClient {
     address payable public provider;
     address payable public client;
 
+    address payable public link;
+    uint oraclePayment;
+
     bool clientDeposited;
     bool providerDeposited;
 
@@ -246,10 +257,15 @@ contract Option is ChainlinkClient {
         _;
     }
 
+    modifier isLinkFunded() {
+        require(link.balanceOf(address(this) >= oraclePayment, "Contract needs to be funded with LINK"));
+        _;
+    }
+
 
     // add arg string _priceArea, maxMWh, minMWh
     constructor(address _northpole, string memory _priceArea, uint _startEpoch, uint _duration, 
-                uint _fee, uint _payout, uint _strike) payable {
+                uint _fee, uint _payout, uint _strike, address _link, uint _oraclePayment) payable {
         
         require(msg.value == _payout, "Not enough funds deposited");
         require(keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("SE1")) || 
@@ -270,6 +286,9 @@ contract Option is ChainlinkClient {
         strike = _strike;
         //mawMWh = _mawMWh;
         //minMWh = _minMWh;
+        link = LinkTokenInterface(_link);
+        setChainLinkToken(_link);
+        oraclePayment = _oraclePayment;
     }
 
     function getContractBalance() external view returns (uint) {
@@ -322,7 +341,7 @@ contract Option is ChainlinkClient {
         clientDeposited = false;
     }
 
-    function initContract() contractListed public payable { // emit event to northpole master contract - remove from listed move to active
+    function initContract() contractListed isLinkFunded public payable { // emit event to northpole master contract - remove from listed move to active
         if (block.timestamp > startEpoch) {
             state = State.FINISHED;
             Northpole np = Northpole(northpole);
