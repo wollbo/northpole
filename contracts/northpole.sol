@@ -26,7 +26,7 @@ contract Northpole { // master contract keeping track of listed+active option of
     mapping (address => optionInfo) activeOptions;
     mapping (address => optionInfo) finishedOptions;
 
-    struct optionInfo { // expand to a range of MWh, feePerMWh, payoutPerMWh, minMWh, maxMWh - separate into listedOption - initiatedOption ?
+    struct optionInfo { // possible to delete this? saves many bytes  dont think it is used, all information stored in Moralis db
         string priceArea;
         uint startEpoch;
         uint duration;
@@ -147,8 +147,7 @@ contract Provider {
         require(_fee > 0, "Value must be non-zero");
         require(_payout > 0, "Value must be non-zero");
         require(msg.value == _payout, "Payout must be deposited at contract creation");
-        //require(address(this).balance > _payout, "Provider contract must be appropriately funded with ETH"); analogous to link funding process
-
+        //require(address(this).balance > _payout, "Provider contract must be appropriately funded with ETH"); // unclear how to implement at option creation (compared to value: _payout)
 
         // add ether payout and fee denominated in EUR through payout * EUR/USD * ETH/USD
         // add arg _priceArea
@@ -210,7 +209,7 @@ contract Option is ChainlinkClient {
     address payable public provider;
     address payable public client;
 
-    address payable public link;
+    LinkTokenInterface link;
     uint oraclePayment;
 
     bool clientDeposited;
@@ -258,7 +257,7 @@ contract Option is ChainlinkClient {
     }
 
     modifier isLinkFunded() {
-        require(link.balanceOf(address(this) >= oraclePayment, "Contract needs to be funded with LINK"));
+        require(link.balanceOf(address(this)) >= oraclePayment, "Contract needs to be funded with LINK");
         _;
     }
 
@@ -287,7 +286,7 @@ contract Option is ChainlinkClient {
         //mawMWh = _mawMWh;
         //minMWh = _minMWh;
         link = LinkTokenInterface(_link);
-        setChainLinkToken(_link);
+        setChainlinkToken(_link);
         oraclePayment = _oraclePayment;
     }
 
@@ -366,20 +365,19 @@ contract Option is ChainlinkClient {
     function averagePriceCallback() contractSettlement public payable {} // callback request data
 
     function checkStrike() contractSettlement public payable { // in fixedprice scenario only this function needs to be called to settle
+        Northpole np = Northpole(northpole);
+        np.addToFinished(provider, client, priceArea, startEpoch, duration, fee, payout, strike, fixedPrice);
+        state = State.FINISHED;
         if (block.timestamp > (2*duration + startEpoch)) { // if we have entered the next month we should still be able to reach the API, change EA
             client.transfer(fee);
             provider.transfer(address(this).balance); // provider is responsible for making sure that the contract is called on time
         }
-        if (fixedPrice >= strike) {
-            client.transfer(payout);
-            provider.transfer(address(this).balance);
+        else {
+            if (fixedPrice >= strike) {
+                client.transfer(payout);
+            }
+            provider.transfer(address(this).balance); // more gas efficient to condense
         }
-        if (fixedPrice < strike) {
-            provider.transfer(address(this).balance);
-        }
-        Northpole np = Northpole(northpole);
-        np.addToFinished(provider, client, priceArea, startEpoch, duration, fee, payout, strike, fixedPrice);
-        state = State.FINISHED;
     }
 
     function updateContract() contractSettlement public payable {} // requestAveragePrice, wait for callback, checkStrike
