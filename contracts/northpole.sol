@@ -1,4 +1,4 @@
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
@@ -22,25 +22,6 @@ contract Northpole { // master contract keeping track of listed+active option of
     mapping (address => bool) active;
     mapping (address => bool) finished;
 
-    mapping (address => optionInfo) listedOptions;
-    mapping (address => optionInfo) activeOptions;
-    mapping (address => optionInfo) finishedOptions;
-
-    struct optionInfo { // possible to delete this? saves many bytes  dont think it is used, all information stored in Moralis db
-        string priceArea;
-        uint startEpoch;
-        uint duration;
-        uint fee;
-        uint payout;
-        uint strike;
-        //uint MWh;
-        //uint minMWh;
-        //uint maxMWh;
-        address provider; // maybe add client
-        address client;
-        uint value;
-    }
-
     constructor() {
         owner = msg.sender;
     }
@@ -57,13 +38,6 @@ contract Northpole { // master contract keeping track of listed+active option of
     function addToListed(address _optionAddress, string memory _priceArea, uint _startEpoch, uint _duration, uint _fee, uint _payout, uint _strike) public {
         require(activeProvider[msg.sender]);
         listed[_optionAddress] = true;
-        optionInfo storage newListedOption = listedOptions[_optionAddress];
-        newListedOption.priceArea = _priceArea;
-        newListedOption.startEpoch = _startEpoch;
-        newListedOption.duration = _duration;
-        newListedOption.fee = _fee;
-        newListedOption.payout = _payout;
-        newListedOption.strike = _strike;
         emit newListedContract(msg.sender, _optionAddress, _priceArea, _startEpoch, _duration, _fee, _payout, _strike);
     }
 
@@ -71,10 +45,6 @@ contract Northpole { // master contract keeping track of listed+active option of
         require(listed[msg.sender]);
         listed[msg.sender] = false;
         active[msg.sender] = true;
-        activeOptions[msg.sender] = listedOptions[msg.sender];
-        delete(listedOptions[msg.sender]);
-        optionInfo storage newActiveOption = activeOptions[msg.sender];
-        newActiveOption.client = _clientAddress;
         emit activeContract(msg.sender, _providerAddress, _clientAddress, _priceArea, _startEpoch, _duration, _fee, _payout, _strike);
     }
 
@@ -82,10 +52,6 @@ contract Northpole { // master contract keeping track of listed+active option of
         require(active[msg.sender]);
         active[msg.sender] = false;
         finished[msg.sender] = true;
-        finishedOptions[msg.sender] = activeOptions[msg.sender];
-        delete(activeOptions[msg.sender]);
-        optionInfo storage newFinishedOption = activeOptions[msg.sender];
-        newFinishedOption.value = _value;
         emit finishedContract(msg.sender, _providerAddress, _clientAddress, _priceArea, _startEpoch, _duration, _fee, _payout, _strike, _value);
     }
 
@@ -127,6 +93,8 @@ contract Provider {
 
     address public LINK_MATIC = 0x326C977E6efc84E512bB9C30f76E30c160eD06FB;
     uint public ORACLE_PAYMENT = 1 * 10 ** 17;
+    address public ORACLE = 0x7f09b14C7975800D9624256C5329713970CC0176;
+    bytes32 JOB_ID = "b6e55cc8ec9340a2870f309bd1ab59f6";
 
     //string[4] public priceAreas = ["SE1", "SE2", "SE3", "SE4", "FI"]
 
@@ -151,7 +119,7 @@ contract Provider {
 
         // add ether payout and fee denominated in EUR through payout * EUR/USD * ETH/USD
         // add arg _priceArea
-        Option o = (new Option){value: _payout}(northpole, _priceArea, _startEpoch, _duration, _fee, _payout, _strike, LINK_MATIC, ORACLE_PAYMENT);
+        Option o = (new Option){value: _payout}(northpole, _priceArea, _startEpoch, _duration, _fee, _payout, _strike);
         LinkTokenInterface link = LinkTokenInterface(LINK_MATIC);
         link.transfer(address(o), ORACLE_PAYMENT);
 
@@ -195,6 +163,7 @@ contract Provider {
 
 
 contract Option is ChainlinkClient {
+    using Chainlink for Chainlink.Request;
 
     address public northpole;
     string priceArea;
@@ -204,16 +173,20 @@ contract Option is ChainlinkClient {
     uint payout;
     uint strike;
 
-    uint constant fixedPrice = 150 * 10**18; // until we use CL-EA price
+    uint requests = 0;
+    uint value = 0;
 
     address payable public provider;
     address payable public client;
 
-    LinkTokenInterface link;
-    uint oraclePayment;
+    LinkTokenInterface link; // sadly needs to be hardcoded in here, will not compile if used as constructor arguments from provider
+    address public LINK_MATIC = 0x326C977E6efc84E512bB9C30f76E30c160eD06FB;
+    uint public ORACLE_PAYMENT = 1 * 10 ** 17;
+    address public ORACLE = 0x7f09b14C7975800D9624256C5329713970CC0176;
+    bytes32 JOB_ID = "b6e55cc8ec9340a2870f309bd1ab59f6";
 
-    bool clientDeposited;
-    bool providerDeposited;
+    bool clientDeposited = false;
+    bool providerDeposited = true;
 
     enum State {CREATED, LISTED, INITIATED, FINISHED} // possible that CREATED and LISTED should be merged
     State public state;
@@ -257,14 +230,14 @@ contract Option is ChainlinkClient {
     }
 
     modifier isLinkFunded() {
-        require(link.balanceOf(address(this)) >= oraclePayment, "Contract needs to be funded with LINK");
+        require(link.balanceOf(address(this)) >= ORACLE_PAYMENT, "Contract needs to be funded with LINK");
         _;
     }
 
 
-    // add arg string _priceArea, maxMWh, minMWh
+    // add maxMWh, minMWh
     constructor(address _northpole, string memory _priceArea, uint _startEpoch, uint _duration, 
-                uint _fee, uint _payout, uint _strike, address _link, uint _oraclePayment) payable {
+                uint _fee, uint _payout, uint _strike) payable {
         
         require(msg.value == _payout, "Not enough funds deposited");
         require(keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("SE1")) || 
@@ -273,8 +246,7 @@ contract Option is ChainlinkClient {
                 keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("SE4")) ||
                 keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("FI")) ||
                 keccak256(abi.encodePacked(_priceArea)) == keccak256(abi.encodePacked("SYS")));
-        providerDeposited = true;
-        clientDeposited = false;
+
         provider = payable(msg.sender);
         northpole = _northpole;
         priceArea = _priceArea;
@@ -285,9 +257,8 @@ contract Option is ChainlinkClient {
         strike = _strike;
         //mawMWh = _mawMWh;
         //minMWh = _minMWh;
-        link = LinkTokenInterface(_link);
-        setChainlinkToken(_link);
-        oraclePayment = _oraclePayment;
+        link = LinkTokenInterface(LINK_MATIC);
+        setChainlinkToken(LINK_MATIC);
     }
 
     function getContractBalance() external view returns (uint) {
@@ -320,6 +291,10 @@ contract Option is ChainlinkClient {
 
     function getStrike() external view returns (uint) {
         return strike;
+    }
+
+    function getValue() external view returns (uint) {
+        return value;
     }
 
     function listContract() providerOnly contractCreated public payable { // moves contract to front-end
@@ -360,27 +335,40 @@ contract Option is ChainlinkClient {
         }   
     }
 
-    function requestAveragePrice() contractSettlement public payable {} // call request to external adapter, pay with oracle payment
+    function requestPriceAreaPriceData() contractSettlement public returns (bytes32 requestId) { // hardcoded to contracted priceArea
+        Chainlink.Request memory request = buildChainlinkRequest(JOB_ID, address(this), this.fulfill.selector);
+        // Set the parameters for the bridge request
+        request.add("pricearea", priceArea);
+        request.add("return", "Value");
+        // Sends the request
+        return sendChainlinkRequestTo(ORACLE, request, ORACLE_PAYMENT);
+    }
+    
+    /**
+     * Oracle callback function
+     */ 
+    function fulfill(bytes32 _requestId, uint256 _value) contractSettlement public recordChainlinkFulfillment(_requestId) {
+        value = _value;
+        requests = requests + 1;
+    }
 
-    function averagePriceCallback() contractSettlement public payable {} // callback request data
-
-    function checkStrike() contractSettlement public payable { // in fixedprice scenario only this function needs to be called to settle
+    function checkStrike() contractSettlement public payable {
         Northpole np = Northpole(northpole);
-        np.addToFinished(provider, client, priceArea, startEpoch, duration, fee, payout, strike, fixedPrice);
+        np.addToFinished(provider, client, priceArea, startEpoch, duration, fee, payout, strike, value);
         state = State.FINISHED;
         if (block.timestamp > (2*duration + startEpoch)) { // if we have entered the next month we should still be able to reach the API, change EA
             client.transfer(fee);
             provider.transfer(address(this).balance); // provider is responsible for making sure that the contract is called on time
         }
         else {
-            if (fixedPrice >= strike) {
+            require(requests > 0, "Price needs to be requested atleast once");
+            require(value > 0, "Error with requested price, wait or request again");
+            if (value >= strike * 100) { // multiplied by 100 in external adapter to remove decimals
                 client.transfer(payout);
             }
             provider.transfer(address(this).balance); // more gas efficient to condense
         }
     }
-
-    function updateContract() contractSettlement public payable {} // requestAveragePrice, wait for callback, checkStrike
 
     function cancelListing() providerOnly contractListed public payable {
         require(clientDeposited == false);
