@@ -21,6 +21,15 @@ function User({account}) {
     });
   };
 
+  const handleRequestSuccess= () => {
+    dispatch({
+      type: "success",
+      message: `Successfully sent price request`,
+      title: "Request successful",
+      position: "topL"
+    });
+  };
+
   const handleError= (msg) => {
     dispatch({
       type: "error",
@@ -34,13 +43,13 @@ function User({account}) {
   useEffect(() => {
 
     async function fetchContracts() {
-      const Contracts = Moralis.Object.extend("Active"); // not only listed but ACTIVE contracts
+      const Contracts = Moralis.Object.extend("ContractActive"); // not only listed but ACTIVE contracts. EXTEND TO FINISHED FOR CLIENT+PROVIDER
       const query = new Moralis.Query(Contracts);
       query.equalTo("clientAddress", account);
       const result = await query.find();
       console.log(result)
 
-      const Providers = Moralis.Object.extend("Provider");
+      const Providers = Moralis.Object.extend("ContractProvider");
       const provider = new Moralis.Query(Providers);
       provider.equalTo("providerOwner", account);
       const providerResult = await provider.find();
@@ -91,6 +100,43 @@ function User({account}) {
         handleError(error.data.message)
       }
     });
+  }
+
+  const requestPrice = async function(optionAddress, startEpoch, duration) { // for testing add start epoch and duration
+
+    let options = {
+      contractAddress: optionAddress,
+      functionName: "requestPriceAreaPriceData",
+      abi: [
+        {
+          "inputs": [],
+          "name": "requestPriceAreaPriceData",
+          "outputs": [
+            {
+              "internalType": "bytes32",
+              "name": "requestId",
+              "type": "bytes32"
+            }
+          ],
+          "stateMutability": "nonpayable",
+          "type": "function"
+        }
+      ],
+      params: {},
+    }
+    console.log(Math.trunc(Date.now()/1000))
+    console.log(Number(startEpoch)+Number(duration))
+
+    await contractProcessor.fetch({
+      params: options,
+      onSuccess: () => {
+        handleRequestSuccess();
+      },
+      onError: (error) => {
+        handleError(error.data.message)
+      }
+    });
+    
   }
 
   function convertDate(epoch) {
@@ -196,12 +242,26 @@ function User({account}) {
                         svg="matic"
                       />{e.attributes.fee/10**18}
                     </div>
+                    <div className="buttonContainers">
+                    <Button
+                      isFullWidth
+                      color="blue"
+                      icon="chainlink"
+                      iconColor="white"
+                      onClick={() => requestPrice(String(e.attributes.optionAddress), e.attributes.startEpoch, e.attributes.duration)} // for testing add startEpoch and duration
+                      size="default"
+                      text="Request"
+                      theme="primary"
+                      type="button"
+                    />
                     <Button
                       onClick={() => evaluateContract(String(e.attributes.optionAddress))}
                       isFullWidth
                       text="Evaluate"
-                      theme="primary"
+                      theme="colored"
+                      color="yellow"
                     />
+                    </div>
                   </Card> 
                 </div>
               )
@@ -292,13 +352,26 @@ function User({account}) {
                         svg="matic"
                       />{e.attributes.fee/10**18}
                     </div>
+                    <div className="buttonContainers">
+                    <Button
+                      isFullWidth
+                      color="blue"
+                      icon="chainlink"
+                      iconColor="white"
+                      onClick={() => requestPrice(String(e.attributes.optionAddress))}
+                      size="default"
+                      text="Request"
+                      theme="primary"
+                      type="button"
+                    />
                     <Button
                       onClick={() => evaluateContract(String(e.attributes.optionAddress))}
                       isFullWidth
                       text="Evaluate"
                       theme="colored"
-                      color="red"
+                      color="yellow"
                     />
+                    </div>
                   </Card> 
                 </div>
               )

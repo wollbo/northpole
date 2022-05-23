@@ -1,0 +1,6 @@
+.buttonContainers {
+    width: 300px;
+    justify-content: flex-end;
+    display: flex;
+    align-items: center;
+  }

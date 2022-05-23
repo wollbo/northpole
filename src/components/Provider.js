@@ -3,20 +3,21 @@ import { Icon, Modal, Card, Button, Select, DatePicker, Input, useNotification }
 import { useState, useEffect } from "react";
 import { useMoralis, useWeb3ExecuteFunction} from "react-moralis";
 
-function Provider({account}) {
+function Provider({account}) { // add withdrawal function/self destruct
 
   const [isVisible, setVisible] = useState(false);
   const { Moralis } = useMoralis();
   const [providerContracts, setProviderContracts] = useState();
-  const [priceArea, setPriceArea] = useState("se1");
+  const [priceArea, setPriceArea] = useState("SE1");
   const [contractDate, setContractDate] = useState(new Date());
   const [payout, setPayout] = useState(1/100);
   const [fee, setFee] = useState(1/1000);
   const [strike, setStrike] = useState(100);
   const contractProcessor = useWeb3ExecuteFunction();
   const dispatch = useNotification();
+  const duration = 300; // 5 minutes (300) for test case!, 84000 otherwise
 
-  const northpoleAddress = "0xA753E4a0a82e4eC531ABE3636E2CF04629984f33";
+  const northpoleAddress = "0x988f1301b1d88D23fff519933613Fbe55bd2CD66"; // remember to update for each new iteration
 
   const handleSuccess= () => {
     dispatch({
@@ -39,21 +40,35 @@ function Provider({account}) {
   const handleProviderSuccess= () => {
     dispatch({
       type: "success",
-      message: `Successfully created provider contract. Close this window and press the "+" again to create contracts`,
+      message: `Successfully created provider contract, remember to fund it with LINK! Close this window and press the "+" again to create contracts`,
       title: "Provider creation successful",
       position: "topL"
     });
   };
+
+  const handleCopied=() => {
+    dispatch({
+      type: "success",
+      message: ``,
+      title: "Address copied",
+      position: "topL"
+    })
+  }
 
   function convertEpoch(date) {
     const e = Date.parse(date);
     return e/1000;
   }
 
+  function convertEpochNow() {
+    const e = Date.now()
+    return Math.trunc(e/1000)+duration;
+  }
+
   useEffect(() => { // need a case for when there is no provider contract
 
     async function fetchProviders() {
-      const Contracts = Moralis.Object.extend("Provider"); // not only listed but ACTIVE contracts
+      const Contracts = Moralis.Object.extend("ContractProvider"); // not only listed but ACTIVE contracts
       const query = new Moralis.Query(Contracts);
       query.equalTo("providerOwner", account);
       const result = await query.find();
@@ -95,7 +110,7 @@ function Provider({account}) {
         handleProviderSuccess();
       },
       onError: (error) => {
-        handleError(error.message)
+        handleError(error.data.message)
       }
     });
   }
@@ -177,9 +192,14 @@ function Provider({account}) {
         handleSuccess();
       },
       onError: (error) => {
-        handleError(error)
+        handleError(error.message)
       }
     });
+  }
+
+  const copy = async (address) => {
+    await navigator.clipboard.writeText(address);
+    handleCopied()
   }
 
   return (
@@ -205,6 +225,15 @@ function Provider({account}) {
                     isDisabled // add convertPriceArea
                   >
                   <div className="inputs">
+                    Provider 
+                    <Button
+                      onClick={() => copy(e.attributes.providerAddress)}
+                      icon="link"
+                      iconLayout="trailing"
+                      text={e.attributes.providerAddress.substr(0, 10)+"..."}
+                      theme="ghost"
+                    />
+
                     Price Area
                     <Select
                       defaultOptionIndex={0}
@@ -303,8 +332,8 @@ function Provider({account}) {
                     onClick={() => createContract(
                       String(e.attributes.providerAddress), // provider contract address in database
                       priceArea,
-                      convertEpoch(contractDate),
-                      86400,
+                      convertEpochNow(), // convertEpoch(contractDate) in production
+                      duration,
                       String(fee*10**18),
                       String(payout*10**18),
                       strike

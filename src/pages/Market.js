@@ -65,15 +65,15 @@ const Market = () => {
   useEffect(() =>{
     
     async function fetchContracts() {
-      const Listed = Moralis.Object.extend("Listed");
+      const Listed = Moralis.Object.extend("ContractListed");
       const query = new Moralis.Query(Listed);
       // add to query: remove initiated contracts from Moralis.object.extend("ContractActive")
       query.equalTo("priceArea", searchFilters.priceArea);
       //query.greaterThanOrEqualTo("maxMWh_decimal", searchFilters.energyAmount);
       //query.lessThanOrEqualTo("minMWh_decimal", searchFilters.energyAmount);
-      query.equalTo("startEpoch_decimal", Date.parse(searchFilters.contractDate)/1000); // Date.parse returns in ms + GMT, sync this with adapter
+      //query.equalTo("startEpoch_decimal", Date.parse(searchFilters.contractDate)/1000); // commented out for testing; Date.parse returns in ms + GMT, sync this with adapter
 
-      const Active = Moralis.Object.extend("Active");
+      const Active = Moralis.Object.extend("ContractActive");
       const active = new Moralis.Query(Active);
       var contracts = await active.find();
       var activeContracts = [];
@@ -82,7 +82,7 @@ const Market = () => {
       })
       console.log(activeContracts);
 
-      const Finished = Moralis.Object.extend("Finished");
+      const Finished = Moralis.Object.extend("ContractFinished");
       const finished = new Moralis.Query(Finished);
       var contracts = await finished.find();
       var finishedContracts = [];
@@ -91,7 +91,7 @@ const Market = () => {
       })
       console.log(finishedContracts);
 
-      query.notContainedIn("optionAddress", finishedContracts) // for some reason this does not as an 'and' operator
+      query.notContainedIn("optionAddress", finishedContracts) // for some reason this does not act as an 'and' operator
       query.notContainedIn("optionAddress", activeContracts)
 
       const result = await query.find();
