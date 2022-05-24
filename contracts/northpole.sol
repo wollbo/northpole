@@ -109,7 +109,7 @@ contract Provider {
 
     // add arg string _priceArea
     function createOption(string memory _priceArea, uint _startEpoch, uint _duration, uint _fee, uint _payout, uint _strike) public payable providerOnly returns (address) {
-
+        require((_startEpoch > block.timestamp), "Start date must be in the future");
         require((_duration > 0), "Expiration date must be later than start date");
         //require(_priceArea in priceAreas);
         require(_fee > 0, "Value must be non-zero");

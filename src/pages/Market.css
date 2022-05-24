@@ -55,6 +55,9 @@
     padding:30px;
     height: calc(100vh - 150px);
     overflow: scroll;
+    flex-wrap: wrap;
+    flex-direction: row;
+    display: flex;
 }
 
 
@@ -94,8 +97,8 @@
 }
 
 .bottomButton {
-    margin-top:50px;
-    justify-content: space-between;
+    margin-top:10px;
+    justify-content: center;
     display: flex;
     width:100%;
     align-items: center;

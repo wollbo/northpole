@@ -45,20 +45,22 @@ function User({account}) {
   useEffect(() => {
 
     async function fetchContracts() {
-      const Finished = Moralis.Object.extend("ContractFinished");
+      const Finished = Moralis.Object.extend("Finished");
       const finished = new Moralis.Query(Finished);
       finished.equalTo("clientAddress", account);
+      finished.descending("startEpoch_decimal")
       const finishedClientResult = await finished.find();
       console.log(finishedClientResult)
 
-      const Active = Moralis.Object.extend("ContractActive"); // not only listed but ACTIVE contracts. EXTEND TO FINISHED FOR CLIENT+PROVIDER
+      const Active = Moralis.Object.extend("Active"); // not only listed but ACTIVE contracts. EXTEND TO FINISHED FOR CLIENT+PROVIDER
       const query = new Moralis.Query(Active);
       query.equalTo("clientAddress", account);
       query.doesNotMatchKeyInQuery("optionAddress", "optionAddress", finished)
+      query.descending("startEpoch_decimal")
       const result = await query.find();
       console.log(result)
 
-      const Providers = Moralis.Object.extend("ContractProvider");
+      const Providers = Moralis.Object.extend("Provider");
       const provider = new Moralis.Query(Providers);
       provider.equalTo("providerOwner", account);
       
@@ -73,12 +75,13 @@ function User({account}) {
 
       const finishedProvider = new Moralis.Query(Finished);
       finishedProvider.containedIn("providerAddress", providerContracts)
+      finishedProvider.descending("startEpoch_decimal")
       const finishedProviderResult = await finishedProvider.find();
 
       const providerQuery = new Moralis.Query(Active);
       providerQuery.containedIn("providerAddress", providerContracts)
       providerQuery.doesNotMatchKeyInQuery("optionAddress", "optionAddress", finishedProvider)
-
+      providerQuery.descending("startEpoch_decimal")
       const providerResultMain = await providerQuery.find();
      
       setUserContracts(result);
@@ -204,14 +207,14 @@ function User({account}) {
         hasFooter={false}
         title="Your contracts"
         isVisible={isVisible}
+        canOverflow={true}
       >
-        <div style={{display:"flex", justifyContent:"start", flexWrap:"wrap", gap:"15px"}}>
+        <div style={{display:"flex", justifyContent:"start", flexWrap:"wrap", gap:"15px", overflow: "scroll"}}>
           {userContracts &&
             userContracts.map((e)=>{
               return(
                 <div style={{ width: "220px"}}>
                   <Card
-                    isDisabled
                     title={`${e.attributes.priceArea} ${convertDate(e.attributes.startEpoch*1000)}`} // add convertPriceArea
                   >
                     <div>
@@ -305,7 +308,6 @@ function User({account}) {
               return(
                 <div style={{ width: "220px"}}>
                   <Card
-                    isDisabled
                     title={`${e.attributes.priceArea} ${convertDate(e.attributes.startEpoch*1000)}`} // add convertPriceArea
                   >
                     <div
@@ -416,7 +418,6 @@ function User({account}) {
               return(
                 <div style={{ width: "220px"}}>
                   <Card
-                    isDisabled
                     title={`${e.attributes.priceArea} ${convertDate(e.attributes.startEpoch*1000)}`} // add convertPriceArea
                   >
                     <div>
@@ -507,7 +508,6 @@ function User({account}) {
               return(
                 <div style={{ width: "220px"}}>
                   <Card
-                    isDisabled
                     title={`${e.attributes.priceArea} ${convertDate(e.attributes.startEpoch*1000)}`} // add convertPriceArea
                   >
                     <div

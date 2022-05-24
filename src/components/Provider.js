@@ -15,9 +15,9 @@ function Provider({account}) { // add withdrawal function/self destruct
   const [strike, setStrike] = useState(100);
   const contractProcessor = useWeb3ExecuteFunction();
   const dispatch = useNotification();
-  const duration = 300; // 5 minutes (300) for test case!, 84000 otherwise
+  const duration = 84000; // 5 minutes (300) for test case!, 84000 otherwise
 
-  const northpoleAddress = "0x988f1301b1d88D23fff519933613Fbe55bd2CD66"; // remember to update for each new iteration
+  const northpoleAddress = "0x43f9fb770F40cA0D68442ed8AF69c6903d6B031C"; // remember to update for each new iteration
 
   const handleSuccess= () => {
     dispatch({
@@ -49,7 +49,7 @@ function Provider({account}) { // add withdrawal function/self destruct
   const handleCopied=() => {
     dispatch({
       type: "success",
-      message: ``,
+      message: `Remember to fund provider contract with LINK`,
       title: "Address copied",
       position: "topL"
     })
@@ -60,15 +60,15 @@ function Provider({account}) { // add withdrawal function/self destruct
     return e/1000;
   }
 
-  function convertEpochNow() {
+  function convertEpochNow() { // only used for testing
     const e = Date.now()
     return Math.trunc(e/1000)+duration;
   }
 
-  useEffect(() => { // need a case for when there is no provider contract
+  useEffect(() => { 
 
     async function fetchProviders() {
-      const Contracts = Moralis.Object.extend("ContractProvider"); // not only listed but ACTIVE contracts
+      const Contracts = Moralis.Object.extend("Provider"); // not only listed but ACTIVE contracts
       const query = new Moralis.Query(Contracts);
       query.equalTo("providerOwner", account);
       const result = await query.find();
@@ -192,7 +192,7 @@ function Provider({account}) { // add withdrawal function/self destruct
         handleSuccess();
       },
       onError: (error) => {
-        handleError(error.message)
+        handleError(error.data.message)
       }
     });
   }
@@ -332,7 +332,7 @@ function Provider({account}) { // add withdrawal function/self destruct
                     onClick={() => createContract(
                       String(e.attributes.providerAddress), // provider contract address in database
                       priceArea,
-                      convertEpochNow(), // convertEpoch(contractDate) in production
+                      convertEpoch(contractDate), // convertEpoch(contractDate) in production, convertEpochNow() for testing
                       duration,
                       String(fee*10**18),
                       String(payout*10**18),
