@@ -228,7 +228,7 @@ function Provider({account}) { // add withdrawal function/self destruct
                     Provider 
                     <Button
                       onClick={() => copy(e.attributes.providerAddress)}
-                      icon="link"
+                      icon="paperclip"
                       iconLayout="trailing"
                       text={e.attributes.providerAddress.substr(0, 10)+"..."}
                       theme="ghost"

@@ -15,7 +15,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    width:93%;
+    width:95%;
     padding: 30px 50px;
     background-color: black
   }
@@ -51,10 +51,16 @@
 }
 
 .marketPlaceContracts {
-    width: 33%;
+    width: 63%;
     padding:30px;
     height: calc(100vh - 150px);
     overflow: scroll;
+}
+
+
+.marketPlaceMap {
+    width: 30%;
+    padding:30px;
 }
 
 .contractDiv {

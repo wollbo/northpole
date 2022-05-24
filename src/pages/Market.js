@@ -7,6 +7,7 @@ import { ConnectButton, Icon, DatePicker, Select, Input, Button, useNotification
 import { useMoralis, useWeb3ExecuteFunction } from "react-moralis";
 import Provider from "../components/Provider"
 import User from "../components/User";
+import Map from "../images/panordic.png";
 
 const Market = () => {
   const { state: searchFilters } = useLocation(); // change searchReminder to searchFilter, default NO filter show all contracts
@@ -46,28 +47,11 @@ const Market = () => {
     });
   };
 
-  // const contractsList = [
-  //   {
-  //     attributes: {
-  //       priceArea: "Sundsvall",
-  //       contractDate: "2022-04-22",
-  //       fee: "20 €/MWh",
-  //       strikePrice: "150 €",
-  //       payOut: "100 €/MWh",
-  //       minAmount: "1 MWh",
-  //       maxAmount: "10 MWh",
-  //       imgUrl:
-  //         "https://ipfs.io/images/ipfs-cluster.png",
-  //     },
-  //   },
-  // ];
-
   useEffect(() =>{
     
     async function fetchContracts() {
       const Listed = Moralis.Object.extend("ContractListed");
       const query = new Moralis.Query(Listed);
-      // add to query: remove initiated contracts from Moralis.object.extend("ContractActive")
       query.equalTo("priceArea", searchFilters.priceArea);
       //query.greaterThanOrEqualTo("maxMWh_decimal", searchFilters.energyAmount);
       //query.lessThanOrEqualTo("minMWh_decimal", searchFilters.energyAmount);
@@ -132,6 +116,19 @@ const Market = () => {
       }
     });
   }
+
+  function priceAreaImageUrl(priceAreaId) {
+    const ipfsUrlMap = {
+      "SE1": "https://ipfs.io/ipfs/QmebzRcoRixgZA7LtJ3PGK75JUWcAD4y7HZerkuEcT7omz",
+      "SE2": "https://ipfs.io/ipfs/Qmb5ozKVjBJjSUkUWvgapSSW6a7pYewYHLsjySHVK3n724",
+      "SE3": "https://ipfs.io/ipfs/QmdeJWhns7mVTdVHhbNp2toa63tM16cm21RwYBrcEwLVnF",
+      "SE4": "https://ipfs.io/ipfs/QmU5nEwDD5fVqaMnMjkZ6o9xDBATw2zrTqLipAaKjpJCtR",
+      "FI": "https://ipfs.io/ipfs/QmPQojZz5DRjWDkENhTPYV4GaSxC9ybpzHf6t2rUX9XhXS",
+      "SYS": "https://ipfs.io/ipfs/QmQrBafFSfRLct3za2biUEMLtdXh6fWuHnwRGEBpVGFWAw"
+    }
+    var result = ipfsUrlMap[priceAreaId];
+    return result
+  } 
 
 
 
@@ -260,6 +257,7 @@ const Market = () => {
           })}
         </div>
         <div className="marketPlaceMap">
+          <img src={Map} alt="Price area map" height="766px" width="555px" />
         </div>
       </div>
     </>

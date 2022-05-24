@@ -9,6 +9,8 @@ function User({account}) {
   const { Moralis } = useMoralis();
   const [userContracts, setUserContracts] = useState();
   const [providerContracts, setProviderContracts] = useState();
+  const [finishedContracts, setFinishedContracts] = useState();
+  const [finishedProviderContracts, setFinishedProviderContracts] = useState();
   const contractProcessor = useWeb3ExecuteFunction();
   const dispatch = useNotification();
 
@@ -43,15 +45,23 @@ function User({account}) {
   useEffect(() => {
 
     async function fetchContracts() {
-      const Contracts = Moralis.Object.extend("ContractActive"); // not only listed but ACTIVE contracts. EXTEND TO FINISHED FOR CLIENT+PROVIDER
-      const query = new Moralis.Query(Contracts);
+      const Finished = Moralis.Object.extend("ContractFinished");
+      const finished = new Moralis.Query(Finished);
+      finished.equalTo("clientAddress", account);
+      const finishedClientResult = await finished.find();
+      console.log(finishedClientResult)
+
+      const Active = Moralis.Object.extend("ContractActive"); // not only listed but ACTIVE contracts. EXTEND TO FINISHED FOR CLIENT+PROVIDER
+      const query = new Moralis.Query(Active);
       query.equalTo("clientAddress", account);
+      query.doesNotMatchKeyInQuery("optionAddress", "optionAddress", finished)
       const result = await query.find();
       console.log(result)
 
       const Providers = Moralis.Object.extend("ContractProvider");
       const provider = new Moralis.Query(Providers);
       provider.equalTo("providerOwner", account);
+      
       const providerResult = await provider.find();
       console.log(providerResult)
       
@@ -61,12 +71,20 @@ function User({account}) {
       })
       console.log(providerContracts)
 
-      const providerQuery = new Moralis.Query(Contracts);
+      const finishedProvider = new Moralis.Query(Finished);
+      finishedProvider.containedIn("providerAddress", providerContracts)
+      const finishedProviderResult = await finishedProvider.find();
+
+      const providerQuery = new Moralis.Query(Active);
       providerQuery.containedIn("providerAddress", providerContracts)
+      providerQuery.doesNotMatchKeyInQuery("optionAddress", "optionAddress", finishedProvider)
+
       const providerResultMain = await providerQuery.find();
      
       setUserContracts(result);
-      setProviderContracts(providerResultMain)
+      setFinishedContracts(finishedClientResult);
+      setProviderContracts(providerResultMain);
+      setFinishedProviderContracts(finishedProviderResult);
     }
 
     fetchContracts();
@@ -153,14 +171,28 @@ function User({account}) {
       "FI": "Finland",
       "SYS": "System"
     };
+    var result = priceAreaMap[shortName];
     try {
-      return priceAreaMap.shortName;
+      return result;
     }
     catch {
       return shortName;
     }
   }
- // add section with finished contracts + result (strike met, strike not met, failed (for not initialized+not called in time))
+
+  function priceAreaImageUrl(priceAreaId) {
+    const ipfsUrlMap = {
+      "SE1": "https://ipfs.io/ipfs/QmebzRcoRixgZA7LtJ3PGK75JUWcAD4y7HZerkuEcT7omz",
+      "SE2": "https://ipfs.io/ipfs/Qmb5ozKVjBJjSUkUWvgapSSW6a7pYewYHLsjySHVK3n724",
+      "SE3": "https://ipfs.io/ipfs/QmdeJWhns7mVTdVHhbNp2toa63tM16cm21RwYBrcEwLVnF",
+      "SE4": "https://ipfs.io/ipfs/QmU5nEwDD5fVqaMnMjkZ6o9xDBATw2zrTqLipAaKjpJCtR",
+      "FI": "https://ipfs.io/ipfs/QmPQojZz5DRjWDkENhTPYV4GaSxC9ybpzHf6t2rUX9XhXS",
+      "SYS": "https://ipfs.io/ipfs/QmQrBafFSfRLct3za2biUEMLtdXh6fWuHnwRGEBpVGFWAw"
+    }
+    var result = ipfsUrlMap[priceAreaId];
+    return result
+  } 
+
   return (
     <>
       <div onClick={() => setVisible(true)}>
@@ -173,19 +205,20 @@ function User({account}) {
         title="Your contracts"
         isVisible={isVisible}
       >
-        <div style={{display:"flex", justifyContent:"start", flexWrap:"wrap", gap:"10px"}}>
+        <div style={{display:"flex", justifyContent:"start", flexWrap:"wrap", gap:"15px"}}>
           {userContracts &&
             userContracts.map((e)=>{
               return(
-                <div style={{ width: "200px"}}>
+                <div style={{ width: "220px"}}>
                   <Card
                     isDisabled
                     title={`${e.attributes.priceArea} ${convertDate(e.attributes.startEpoch*1000)}`} // add convertPriceArea
                   >
                     <div>
                       <img
-                        width="180px"
-                        src="https://ipfs.io/images/ipfs-cluster.png"
+                        width="200px"
+                        height="140px"
+                        src={priceAreaImageUrl(e.attributes.priceArea)}
                         />
                     </div>
                     <div
@@ -270,7 +303,7 @@ function User({account}) {
           {providerContracts &&
             providerContracts.map((e)=>{
               return(
-                <div style={{ width: "200px"}}>
+                <div style={{ width: "220px"}}>
                   <Card
                     isDisabled
                     title={`${e.attributes.priceArea} ${convertDate(e.attributes.startEpoch*1000)}`} // add convertPriceArea
@@ -294,8 +327,9 @@ function User({account}) {
                     </div>
                     <div>
                       <img
-                        width="180px"
-                        src="https://ipfs.io/images/ipfs-cluster.png"
+                        width="200px"
+                        height="140px"
+                        src={priceAreaImageUrl(e.attributes.priceArea)}
                         />
                     </div>
                     <div
@@ -371,6 +405,205 @@ function User({account}) {
                       theme="colored"
                       color="yellow"
                     />
+                    </div>
+                  </Card> 
+                </div>
+              )
+            })
+          }
+          {finishedContracts &&
+            finishedContracts.map((e)=>{
+              return(
+                <div style={{ width: "220px"}}>
+                  <Card
+                    isDisabled
+                    title={`${e.attributes.priceArea} ${convertDate(e.attributes.startEpoch*1000)}`} // add convertPriceArea
+                  >
+                    <div>
+                      <img
+                        width="200px"
+                        height="140px"
+                        src={priceAreaImageUrl(e.attributes.priceArea)}
+                        />
+                    </div>
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        justifyContent:'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: '#000000',
+                          fontWeight: 600
+                        }}
+                      >
+                        Strike {e.attributes.strike}  €/MWh
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        color: '#808080',
+                        display: 'flex',
+                        padding: '2.5px',
+                        gap: '5px',
+                        justifyContent:'flex-end',
+                        fontSize: '12px',
+                        width: '70%'
+                      }}
+                    >
+                      Payout 
+                      <Icon
+                        fill="rgb(228, 156, 2)" 
+                        size={14} 
+                        svg="matic"
+                      />
+                      {e.attributes.payout/10**18}
+                    </div>
+                    <div
+                      style={{
+                        color: '#808080',
+                        display: 'flex',
+                        padding: '2.5px',
+                        gap: '5px',
+                        justifyContent:'flex-end',
+                        fontSize: '12px',
+                        width: '70%'
+                      }}
+                    >
+                      Fee
+                      <Icon
+                        fill="rgb(228, 156, 2)" 
+                        size={14} 
+                        svg="matic"
+                      />{e.attributes.fee/10**18}
+                    </div>
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        justifyContent:'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: '#000000',
+                          fontWeight: 600
+                        }}
+                      >
+                        Result {e.attributes.value/100}  €/MWh
+                      </span>
+                    </div>
+                  </Card> 
+                </div>
+              )
+            })
+          }
+          {finishedProviderContracts &&
+            finishedProviderContracts.map((e)=>{
+              return(
+                <div style={{ width: "220px"}}>
+                  <Card
+                    isDisabled
+                    title={`${e.attributes.priceArea} ${convertDate(e.attributes.startEpoch*1000)}`} // add convertPriceArea
+                  >
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        justifyContent:'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: '#000000',
+                          fontWeight: 600
+                        }}
+                      >
+                        Provider
+                      </span>
+                    </div>
+                    <div>
+                      <img
+                        width="200px"
+                        height="140px"
+                        src={priceAreaImageUrl(e.attributes.priceArea)}
+                        />
+                    </div>
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        justifyContent:'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: '#000000',
+                          fontWeight: 600
+                        }}
+                      >
+                        Strike {e.attributes.strike}  €/MWh
+                      </span>
+                    </div>
+                    <div
+                      style={{
+                        color: '#808080',
+                        display: 'flex',
+                        padding: '2.5px',
+                        gap: '5px',
+                        justifyContent:'flex-end',
+                        fontSize: '12px',
+                        width: '70%'
+                      }}
+                    >
+                      Payout 
+                      <Icon
+                        fill="rgb(228, 156, 2)" 
+                        size={14} 
+                        svg="matic"
+                      />
+                      {e.attributes.payout/10**18}
+                    </div>
+                    <div
+                      style={{
+                        color: '#808080',
+                        display: 'flex',
+                        padding: '2.5px',
+                        gap: '5px',
+                        justifyContent:'flex-end',
+                        fontSize: '12px',
+                        width: '70%'
+                      }}
+                    >
+                      Fee
+                      <Icon
+                        fill="rgb(228, 156, 2)" 
+                        size={14} 
+                        svg="matic"
+                      />{e.attributes.fee/10**18}
+                    </div>
+                    <div
+                      style={{
+                        alignItems: 'center',
+                        display: 'flex',
+                        justifyContent:'center',
+                        gap: '5px'
+                      }}
+                    >
+                      <span
+                        style={{
+                          color: '#000000',
+                          fontWeight: 600
+                        }}
+                      >
+                        Result {e.attributes.value/100}  €/MWh
+                      </span>
                     </div>
                   </Card> 
                 </div>
