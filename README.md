@@ -6,8 +6,8 @@ Northpole allows you to create binary options based on the Nordic electricity ma
 
 ## Try it out
 The platform is hosted at:
-https://ppqs6ko41pvb.usemoralis.com/
-https://northpole.vercel.app/
+https://ppqs6ko41pvb.usemoralis.com/ and
+https://northpole.vercel.app/ <br>
 However, the web3uikit resources are currently not inheriting the .css styling in the public builds. For a better experience, clone the repo and host the platform locally with yarn! <br>
 `git clone https://github.com/wollbo/northpole.git` <br>
 `cd northpole` <br>
