@@ -3,14 +3,6 @@ pragma solidity ^0.8.13;
 import "@chainlink/contracts/src/v0.8/interfaces/LinkTokenInterface.sol";
 import "@chainlink/contracts/src/v0.8/ChainlinkClient.sol";
 
-// Basic ETH-only provider contract with fixed strike price
-// Problem: Payout value may fluctuate greatly during listing
-// Either: allow provider to fund contract AFTER contract being accepted (problematic since he may become insolvent)
-// Better solution: allow dynamic updates of contract pricing in front end (user sees fluctuating EUR amount)
-// add buffer of ~1000 to block.timestamp
-
-// Also; add maxPayout (provider deposits maxPayout, is returned the remainder of what the buyer wants to hedge)
-// provider sells contract with 1 < X < 10, client wants 5, provider is returned 5 (or what if new contract is created with 1 < X < 5 ?)
 
 contract Northpole { // master contract keeping track of listed+active option offers
 
@@ -107,18 +99,14 @@ contract Provider {
     event optionCreated (address optionAddress); // it is possible that optionCreated -> optionListed is one single event
     
 
-    // add arg string _priceArea
     function createOption(string memory _priceArea, uint _startEpoch, uint _duration, uint _fee, uint _payout, uint _strike) public payable providerOnly returns (address) {
         require((_startEpoch > block.timestamp), "Start date must be in the future");
         require((_duration > 0), "Expiration date must be later than start date");
-        //require(_priceArea in priceAreas);
         require(_fee > 0, "Value must be non-zero");
         require(_payout > 0, "Value must be non-zero");
         require(msg.value == _payout, "Payout must be deposited at contract creation");
         //require(address(this).balance > _payout, "Provider contract must be appropriately funded with ETH"); // unclear how to implement at option creation (compared to value: _payout)
 
-        // add ether payout and fee denominated in EUR through payout * EUR/USD * ETH/USD
-        // add arg _priceArea
         Option o = (new Option){value: _payout}(northpole, _priceArea, _startEpoch, _duration, _fee, _payout, _strike);
         LinkTokenInterface link = LinkTokenInterface(LINK_MATIC);
         link.transfer(address(o), ORACLE_PAYMENT);
@@ -305,7 +293,7 @@ contract Option is ChainlinkClient {
         require(clientDeposited == false, "Already funded by client");
         require(msg.value == fee);
         client = payable(msg.sender);
-        clientDeposited = true; // here client also supplies selected MWh, minMWh < MWh < maxMWh such that fee = fee * MWh (fee per MWh)
+        clientDeposited = true; // here client also supplies selected MWh, minMWh < MWh < maxMWh such that fee = fee/MWh * MWh
         initContract(); // in the basic case, provider has always deposited
     }
 
