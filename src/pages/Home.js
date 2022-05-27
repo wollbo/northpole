@@ -42,58 +42,64 @@ const Home = () => {
       </div> 
       <div className="tabContent">
         <div className="searchFields">
-          <div className="inputs">
-            Price Area
-            <Select
-              defaultOptionIndex={0}
-              onChange={(data) => setPriceArea(data.id)}
-              options={[
-                {
-                  id: "SE1",
-                  label: "Luleå"
-                },
-                {
-                  id: "SE2",
-                  label: "Sundsvall"
-                },
-                {
-                  id: "SE3",
-                  label: "Stockholm"
-                },
-                {
-                  id: "SE4",
-                  label: "Malmö"
-                },
-                {
-                  id: "FI",
-                  label: "Finland"
-                },
-                {
-                  id: "SYS",
-                  label: "System"
-                },
-              ]}
-            />
+          <body className=inputBody">
+            <div className="inputs">
+              Price Area
+              <Select
+                defaultOptionIndex={0}
+                onChange={(data) => setPriceArea(data.id)}
+                options={[
+                  {
+                    id: "SE1",
+                    label: "Luleå"
+                  },
+                  {
+                    id: "SE2",
+                    label: "Sundsvall"
+                  },
+                  {
+                    id: "SE3",
+                    label: "Stockholm"
+                  },
+                  {
+                    id: "SE4",
+                    label: "Malmö"
+                  },
+                  {
+                    id: "FI",
+                    label: "Finland"
+                  },
+                  {
+                    id: "SYS",
+                    label: "System"
+                  },
+                ]}
+              />
+            </div>
           </div>
           <div className="vl"/>
-          <div className="inputs">
-            Contract Date
-            <DatePicker
-              id="contractDate"
-              onChange={(event) => setContractDate(event.date)} // really only one date needed, should be hardcoded to setDay
-              //validation={{min: Date.toISOString().slice(0, 10)}} // add validation later
-            />
+          <body className=inputBody">
+            <div className="inputs">
+              Contract Date
+              <DatePicker
+                id="contractDate"
+                onChange={(event) => setContractDate(event.date)} // really only one date needed, should be hardcoded to setDay
+                //validation={{min: Date.toISOString().slice(0, 10)}} // add validation later
+              />
+            </div>
           </div>
           <div className="vl" />
-          <div className="inputs">
-            Energy (MWh)
-            <Input
-              value={1}
-              name="addEnergy"
-              type="number"
-              //prefixIcon="plug"
-              onChange={(event) => setEnergyAmount(Number(event.target.value))}
-            />
+          <body className=inputBody">
+            <div className="inputs">
+              Energy (MWh)
+              <Input
+                value={1}
+                name="addEnergy"
+                type="number"
+                //prefixIcon="plug"
+                onChange={(event) => setEnergyAmount(Number(event.target.value))}
+              />
+            </div>
           </div>
           <Link to={"/market"} state={{
             priceArea: priceArea,
