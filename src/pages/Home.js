@@ -42,8 +42,8 @@ const Home = () => {
       </div> 
       <div className="tabContent">
         <div className="searchFields">
-          <body className=inputBody">
-            <div className="inputs">
+          <body class=inputBody">
+            <div class="inputs">
               Price Area
               <Select
                 defaultOptionIndex={0}
@@ -78,8 +78,8 @@ const Home = () => {
             </div>
           </div>
           <div className="vl"/>
-          <body className=inputBody">
-            <div className="inputs">
+          <body class=inputBody">
+            <div class="inputs">
               Contract Date
               <DatePicker
                 id="contractDate"
@@ -89,8 +89,8 @@ const Home = () => {
             </div>
           </div>
           <div className="vl" />
-          <body className=inputBody">
-            <div className="inputs">
+          <body class=inputBody">
+            <div class="inputs">
               Energy (MWh)
               <Input
                 value={1}
