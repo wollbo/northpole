@@ -42,7 +42,7 @@ const Home = () => {
       </div> 
       <div className="tabContent">
         <div className="searchFields">
-          <body className=inputBody">
+          <body className="inputBody">
             <div className="inputs">
               Price Area
               <Select
@@ -78,7 +78,7 @@ const Home = () => {
             </div>
           </div>
           <div className="vl"/>
-          <body className=inputBody">
+          <body className="inputBody">
             <div className="inputs">
               Contract Date
               <DatePicker
@@ -89,7 +89,7 @@ const Home = () => {
             </div>
           </div>
           <div className="vl" />
-          <body className=inputBody">
+          <body className="inputBody">
             <div className="inputs">
               Energy (MWh)
               <Input
