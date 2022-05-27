@@ -70,11 +70,11 @@
   border-bottom: 2px solid rgb(228, 156, 2);
 }
 
-.inputBody .inputs {
-  font-size: 12px;
-  font-weight:bold;
-  margin-top: 10px;
-  width:160px;
+.inputs {
+  font-size: 12px !important;
+  font-weight:bold !important;
+  margin-top: 10px !important;
+  width:160px !important;
 }
 
 
