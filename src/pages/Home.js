@@ -14,17 +14,6 @@ const Home = () => {
   const [energyAmount, setEnergyAmount] = useState(1); // some sort of minimum/maximum MWh
 
 
-  const styledFields = styled.div`
-    width:700px;
-    background-color: white;
-    height:65px;
-    border-radius: 100px;
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    padding-left: 30px;
-  `;
-
   const styledInput = styled.div`
     font-size: 12px;
     font-weight:bold;
@@ -61,7 +50,7 @@ const Home = () => {
         </div>
       </div> 
       <div className="tabContent">
-        <styledFields>
+        <div className="searchFields">
           <styledInput>
             Price Area
             <Select
@@ -127,7 +116,7 @@ const Home = () => {
               <Icon fill="#ffffff" size={24} svg="search" />
             </div>
           </Link>
-        </styledFields>
+        </div>
       </div>
       <div className="electricityMarket">
         <div className="title"> Hedge electricity</div>
