@@ -65,8 +65,8 @@ const Home = () => {
           <ConnectButton />
         </div>
       </div> 
-      <div className="tabContent">
-        <div className="searchFields">
+      <styledTab>
+        <styledFields>
           <styledInput>
             Price Area
             <Select
@@ -132,8 +132,8 @@ const Home = () => {
               <Icon fill="#ffffff" size={24} svg="search" />
             </div>
           </Link>
-        </div>
-      </div>
+        </styledFields>
+      </styledTab>
       <div className="electricityMarket">
         <div className="title"> Hedge electricity</div>
         <div className="text"> Peer-to-peer decentralized binary options on European physical energy markets </div>
