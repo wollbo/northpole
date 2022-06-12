@@ -87,9 +87,7 @@ contract Provider {
     uint public ORACLE_PAYMENT = 1 * 10 ** 17;
     address public ORACLE = 0x7f09b14C7975800D9624256C5329713970CC0176;
     bytes32 JOB_ID = "b6e55cc8ec9340a2870f309bd1ab59f6";
-
-    //string[4] public priceAreas = ["SE1", "SE2", "SE3", "SE4", "FI"]
-
+    uint DAYAHEAD_DELAY = 43200; // day-ahead auction closes at 12:00, results published shortly after
 
     modifier providerOnly() {
         require(msg.sender==provider, "Only the provider may call this function");
@@ -100,7 +98,7 @@ contract Provider {
     
 
     function createOption(string memory _priceArea, uint _startEpoch, uint _duration, uint _fee, uint _payout, uint _strike) public payable providerOnly returns (address) {
-        require((_startEpoch > block.timestamp), "Start date must be in the future");
+        require((_startEpoch > block.timestamp + DAYAHEAD_DELAY), "Start date must be in the future");
         require((_duration > 0), "Expiration date must be later than start date");
         require(_fee > 0, "Value must be non-zero");
         require(_payout > 0, "Value must be non-zero");

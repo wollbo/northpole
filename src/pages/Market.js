@@ -113,7 +113,7 @@ const Market = () => {
         handleSuccess();
       },
       onError: (error) => {
-        handleError(error.data.message)
+        handleError(error.message)
       }
     });
   }
