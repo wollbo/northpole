@@ -13,11 +13,6 @@ const Home = () => {
   const [priceArea, setPriceArea] = useState("SE1");
   const [energyAmount, setEnergyAmount] = useState(1); // some sort of minimum/maximum MWh
 
-  const styledTab = styled.div`
-    width:100%;
-    display: flex;
-    justify-content: center;
-  `;
 
   const styledFields = styled.div`
     width:700px;
@@ -65,7 +60,7 @@ const Home = () => {
           <ConnectButton />
         </div>
       </div> 
-      <styledTab>
+      <div className="tabContent">
         <styledFields>
           <styledInput>
             Price Area
@@ -133,7 +128,7 @@ const Home = () => {
             </div>
           </Link>
         </styledFields>
-      </styledTab>
+      </div>
       <div className="electricityMarket">
         <div className="title"> Hedge electricity</div>
         <div className="text"> Peer-to-peer decentralized binary options on European physical energy markets </div>
