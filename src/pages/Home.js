@@ -1,27 +1,32 @@
 import React from "react";
 import styled from "styled-components"
 import "./Home.css";
+import "../App.css";
 import { Link } from "react-router-dom";
 import bg from "../images/waterfallbg.jpg";
 import logo from "../images/npsimple.png";
 import { ConnectButton, DatePicker, Select, Input, Icon, Logo} from "web3uikit";
 import { useState } from "react";
 
+const StyledSelect = styled.div`
+  border: 0px !important;
+  padding-left: 0px !important;
+  padding-top: 3px !important;
+  padding-bottom: 3px !important;
+  height: 40px !important;
+  font-size: 14px !important;
+  width: 170px !important;
+`;
+
+const StyledConnect = styled.div`
+  font-size: 2px !important
+`
 
 const Home = () => {
-  const [contractDate, setContractDate] = useState(); // initialize to either day or month
+  const [contractDate, setContractDate] = useState(new Date()); // initialize to either day or month
   const [priceArea, setPriceArea] = useState("SE1");
   const [energyAmount, setEnergyAmount] = useState(1); // some sort of minimum/maximum MWh
 
-
-  const StyledInput = styled.div`
-    border: 0px !important;
-    padding-left: 0px !important;
-    padding-top: 3px !important;
-    padding-bottom: 3px !important;
-    height: 40px !important;
-    font-size: 14px !important;
-  `;
   // has to be in range of listed contracts minPower < powerAmount < maxPower
   // create market page, default clickable through tab- no filter
   // create functionality for creating, listing and cancelling contract
@@ -47,7 +52,7 @@ const Home = () => {
             energyAmount: ""
           }} style={{ textDecoration: 'none' }} className="link">Market</Link></div>
         </div>
-        <div className="lrContainers">
+        <div className="lrContainers">       
           <ConnectButton />
         </div>
       </div> 
@@ -55,8 +60,8 @@ const Home = () => {
         <div className="searchFields">
           <div className="inputs">
             Price Area
-            <StyledInput>
-              <Select
+            <div id="select">
+              <Select 
                 defaultOptionIndex={0}
                 onChange={(data) => setPriceArea(data.id)}
                 options={[
@@ -85,8 +90,8 @@ const Home = () => {
                     label: "System"
                   },
                 ]}
-            />
-            </StyledInput>
+              />
+            </div>
           </div>
           <div className="vl"/>
           <div className="inputs">
@@ -94,7 +99,7 @@ const Home = () => {
             <DatePicker
               id="contractDate"
               //type="month" // with month this works but calendar is disabled!
-              disabled="False"
+              //disabled="False"
               //value={contractDate.toLocaleString('default', { month: 'long' })} // "1999-02-22" format works
               onChange={(event) => setContractDate(event.date)} // really only one date needed, should be hardcoded to setDay
               //validation={{min: Date.toISOString().slice(0, 10)}} // add validation later
