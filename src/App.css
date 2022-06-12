@@ -31,3 +31,10 @@
 .sc-lcepkR {
     height: 70% !important;
 }
+
+.web3uikit-select {
+    font-size: 12px;
+    font-weight:bold;
+    margin-top: 10px;
+    width:160px;
+}

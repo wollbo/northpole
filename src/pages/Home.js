@@ -8,7 +8,7 @@ import { useState } from "react";
 
 
 const Home = () => {
-  const [contractDate, setContractDate] = useState(new Date()); // should be hardcoded to only day, setDay
+  const [contractDate, setContractDate] = useState(); // initialize to either day or month
   const [priceArea, setPriceArea] = useState("SE1");
   const [energyAmount, setEnergyAmount] = useState(1); // some sort of minimum/maximum MWh
   // has to be in range of listed contracts minPower < powerAmount < maxPower
@@ -44,7 +44,7 @@ const Home = () => {
         <div className="searchFields">
           <div className="inputs">
             Price Area
-            <Select
+            <Select className="web3uikit-select"
               defaultOptionIndex={0}
               onChange={(data) => setPriceArea(data.id)}
               options={[
@@ -80,6 +80,9 @@ const Home = () => {
             Contract Date
             <DatePicker
               id="contractDate"
+              //type="month" // with month this works but calendar is disabled!
+              disabled="False"
+              //value={contractDate.toLocaleString('default', { month: 'long' })} // "1999-02-22" format works
               onChange={(event) => setContractDate(event.date)} // really only one date needed, should be hardcoded to setDay
               //validation={{min: Date.toISOString().slice(0, 10)}} // add validation later
             />
@@ -97,7 +100,7 @@ const Home = () => {
           </div>
           <Link to={"/market"} state={{
             priceArea: priceArea,
-            contractDate: contractDate, // hardcode to one single day
+            contractDate: contractDate,
             energyAmount: energyAmount
           }}>
             <div className="searchButton">
