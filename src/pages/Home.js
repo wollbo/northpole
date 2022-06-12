@@ -1,4 +1,5 @@
 import React from "react";
+import styled from "styled-components"
 import "./Home.css";
 import { Link } from "react-router-dom";
 import bg from "../images/waterfallbg.jpg";
@@ -11,6 +12,13 @@ const Home = () => {
   const [contractDate, setContractDate] = useState(); // initialize to either day or month
   const [priceArea, setPriceArea] = useState("SE1");
   const [energyAmount, setEnergyAmount] = useState(1); // some sort of minimum/maximum MWh
+
+  const styledInput = styled.div`
+    font-size: 12px;
+    font-weight:bold;
+    margin-top: 10px;
+    width:160px;
+  `;
   // has to be in range of listed contracts minPower < powerAmount < maxPower
   // create market page, default clickable through tab- no filter
   // create functionality for creating, listing and cancelling contract
@@ -42,9 +50,9 @@ const Home = () => {
       </div> 
       <div className="tabContent">
         <div className="searchFields">
-          <div className="inputs">
+          <styledInput>
             Price Area
-            <Select className="web3uikit-select"
+            <Select
               defaultOptionIndex={0}
               onChange={(data) => setPriceArea(data.id)}
               options={[
@@ -74,7 +82,7 @@ const Home = () => {
                 },
               ]}
             />
-          </div>
+          </styledInput>
           <div className="vl"/>
           <div className="inputs">
             Contract Date
