@@ -13,6 +13,23 @@ const Home = () => {
   const [priceArea, setPriceArea] = useState("SE1");
   const [energyAmount, setEnergyAmount] = useState(1); // some sort of minimum/maximum MWh
 
+  const styledTab = styled.div`
+    width:100%;
+    display: flex;
+    justify-content: center;
+  `;
+
+  const styledFields = styled.div`
+    width:700px;
+    background-color: white;
+    height:65px;
+    border-radius: 100px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    padding-left: 30px;
+  `;
+
   const styledInput = styled.div`
     font-size: 12px;
     font-weight:bold;
