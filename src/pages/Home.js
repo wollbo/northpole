@@ -14,7 +14,7 @@ const Home = () => {
   const [energyAmount, setEnergyAmount] = useState(1); // some sort of minimum/maximum MWh
 
 
-  const styledInput = styled.div`
+  const StyledInput = styled.div`
     font-size: 12px;
     font-weight:bold;
     margin-top: 10px;
@@ -51,7 +51,7 @@ const Home = () => {
       </div> 
       <div className="tabContent">
         <div className="searchFields">
-          <styledInput>
+          <StyledInput>
             Price Area
             <Select
               defaultOptionIndex={0}
@@ -83,7 +83,7 @@ const Home = () => {
                 },
               ]}
             />
-          </styledInput>
+          </StyledInput>
           <div className="vl"/>
           <div className="inputs">
             Contract Date
