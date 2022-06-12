@@ -15,10 +15,12 @@ const Home = () => {
 
 
   const StyledInput = styled.div`
-    font-size: 12px;
-    font-weight:bold;
-    margin-top: 10px;
-    width:160px;
+    border: 0px !important;
+    padding-left: 0px !important;
+    padding-top: 3px !important;
+    padding-bottom: 3px !important;
+    height: 40px !important;
+    font-size: 14px !important;
   `;
   // has to be in range of listed contracts minPower < powerAmount < maxPower
   // create market page, default clickable through tab- no filter
@@ -51,39 +53,41 @@ const Home = () => {
       </div> 
       <div className="tabContent">
         <div className="searchFields">
-          <StyledInput>
+          <div className="inputs">
             Price Area
-            <Select
-              defaultOptionIndex={0}
-              onChange={(data) => setPriceArea(data.id)}
-              options={[
-                {
-                  id: "SE1",
-                  label: "Luleå"
-                },
-                {
-                  id: "SE2",
-                  label: "Sundsvall"
-                },
-                {
-                  id: "SE3",
-                  label: "Stockholm"
-                },
-                {
-                  id: "SE4",
-                  label: "Malmö"
-                },
-                {
-                  id: "FI",
-                  label: "Finland"
-                },
-                {
-                  id: "SYS",
-                  label: "System"
-                },
-              ]}
+            <StyledInput>
+              <Select
+                defaultOptionIndex={0}
+                onChange={(data) => setPriceArea(data.id)}
+                options={[
+                  {
+                    id: "SE1",
+                    label: "Luleå"
+                  },
+                  {
+                    id: "SE2",
+                    label: "Sundsvall"
+                  },
+                  {
+                    id: "SE3",
+                    label: "Stockholm"
+                  },
+                  {
+                    id: "SE4",
+                    label: "Malmö"
+                  },
+                  {
+                    id: "FI",
+                    label: "Finland"
+                  },
+                  {
+                    id: "SYS",
+                    label: "System"
+                  },
+                ]}
             />
-          </StyledInput>
+            </StyledInput>
+          </div>
           <div className="vl"/>
           <div className="inputs">
             Contract Date
